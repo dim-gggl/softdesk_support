@@ -1,0 +1,21 @@
+[project]
+name = "softdesk-support"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "dim-gggl",email = "dimitri.gaggioli@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "django (==5.2.3)",
+    "djangorestframework (>=3.16.0,<4.0.0)"
+]
+
+[tool.poetry]
+packages = [{include = "softdesk_support", from = "src"}]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
