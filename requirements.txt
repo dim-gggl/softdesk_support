@@ -1,0 +1,4 @@
+Django==5.2.3
+djangorestframework==3.16.0
+djangorestframework-simplejwt==5.5.10
+pyjwt==2.9.0
