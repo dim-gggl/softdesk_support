@@ -23,4 +23,5 @@ admin.register("authentication")
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("authentication.urls")),
+    path("api/", include("user.urls")),
 ]
