@@ -7,7 +7,7 @@
 Copiez/Collez la commande suivante dans votre terminal :
 _(Pour clôner le projet et se placer à la racine)_
 ```bash
- git clone git@github.com:dim-gggl/softdesk_support.git
+ git clone https://github.com/dim-gggl/softdesk_support.git
  cd SoftDesk_Support
 ```
 
