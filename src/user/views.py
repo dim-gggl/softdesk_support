@@ -1,11 +1,9 @@
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.shortcuts import get_object_or_404
 from .models import User
 from .serializers import UserSerializer
-from .permissions import IsAdminOrIsSelf
+from .permissions import IsAdminOrIsSelf, IsSelf
 
 
 class UserViewSet(ModelViewSet):
@@ -13,15 +11,28 @@ class UserViewSet(ModelViewSet):
     serializer_class = UserSerializer
 
     def get_permissions(self):
-        if self.action == "create":
+        match self.action:
+            case "create":
                 permission_classes = [AllowAny]
-        elif self.action in ["retrieve", "update", "partial_update", "destroy"]:
-            permission_classes = [IsAuthenticated, IsAdminOrIsSelf]
-        elif self.action == "list":
-            permission_classes = [IsAuthenticated]
-        else:
-            permission_classes = [IsAuthenticated]
+            case "retrieve":
+                permission_classes = [IsAuthenticated, IsAdminOrIsSelf]
+            case "update" | "partial_update" | "destroy":
+                permission_classes = [IsAuthenticated, IsSelf]
+            case _:
+                permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
+
+        # if self.action == "create":
+        #     permission_classes = [AllowAny]
+        # elif self.action == "retrieve":
+        #     permission_classes = [IsAuthenticated, IsAdminOrIsSelf]
+        # elif self.action in ["update", "partial_update", "destroy"]:
+        #     permission_classes = [IsAuthenticated, IsSelf]
+        # elif self.action == "list":
+        #     permission_classes = [IsAuthenticated]
+        # else:
+        #     permission_classes = [IsAuthenticated]
+        # return [permission() for permission in permission_classes]
 
     def get_queryset(self):
 
@@ -50,7 +61,7 @@ class UserViewSet(ModelViewSet):
         return queryset
 
 
-    def list(self, request):
+    def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         data = [
@@ -59,26 +70,3 @@ class UserViewSet(ModelViewSet):
             for user in serializer.data
         ]
         return Response(data)
-
-    @action(methods=["post"], detail=False, permission_classes=[AllowAny],
-            url_path="register", url_name="user_register")
-    def register(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        return Response(serializer.data, status=201)
-
-    # @action(methods=["patch"], detail=True, permission_classes=[IsAdminOrIsSelf],
-    #         url_path=f"{user_id}/update/", url_name="update-user")
-    # def update(self, request):
-    #     data = request.data
-    #     if isinstance(data, dict):
-    #         user = get_object_or_404(id=data["id"])
-    #         for k, v in data.items():
-    #             if hasattr(user, k):
-    #                 user.__setattr__(v)
-    #     elif isinstance(data, list):
-
-
-
-

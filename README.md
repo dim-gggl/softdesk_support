@@ -81,9 +81,9 @@ Pour se faire, personnalisez le profil suivant :
 {
     "username": "<VOTRE PSEUDO>",
     "password": "<VOTRE MOT DE PASSE>",
-    "age": 15, // 15 ans est l'âge minimum requis pour l'app
-    "can_be_contacted": true, // Remplacer par false si vous ne souhaitez pas être contacté(e)
-    "can_data_be_shared": true, // Idem si vous ne souhaitez pas que vos données soient partagées avec des entreprises tierces
+    "age": 15,                   // 15 ans est l'âge minimum requis pour l'app
+    "can_be_contacted": false,   // Remplacer par false si vous ne souhaitez pas être contacté(e)
+    "can_data_be_shared": false, // Idem si vous ne souhaitez pas que vos données soient partagées avec des entreprises tierces
 }
 ```
 Et l'envoyer à l'API.
@@ -125,14 +125,14 @@ Ex:
 
 ## 6 - Les Ressources
 
-### - USERS --
+### -- USERS --
 
 Il est possible d'afficher la liste de tous les utilisateurs inscrits :
 
 | ENDPOINT | GET | POST | DELETE |
 |:-:|:-:|:-:|:-:|
-|`api/users/`|Liste de tous les utilisateurs inscrits. | Crée un nouvel utilidateur | NO EFFECT |
-| `api/users/<int:user_id>/` | Affiche les détails d'un utilisateur | ERREUR | Supprime l'utilisateur (Si la requête provient de l'utilisateur lui-même ou d'un admin)
+|`api/users/`|Liste de tous les utilisateurs inscrits. | Crée un nouvel utilidateur | `405 NOT ALLOWED` |
+| `api/users/<int:user_id>/` | Affiche les détails d'un utilisateur | `405 NOT ALLOWED` | Supprime l'utilisateur (Si la requête provient de l'utilisateur lui-même ou d'un membre admin)
 
 
 
@@ -148,8 +148,17 @@ Il est possible d'afficher la liste de tous les utilisateurs inscrits :
 
 ---
 
+### -- PROJECTS --
+
+Comme pour les utilisateurs, les projets peuvent être affichés sous forme de liste, ou individuellement, avec leurs informations détaillées.
+
+| ENDPOINT | GET | POST | DELETE |
+|:-:|:-:|:-:|:-:|
+|`api/projects/`| Liste de tous les projets suavegardés | Créations d'un nouveau projet |  `405 NOT ALOWED` |
+| `api/projects/<int:project_id>/` | Affiche les détails d'un projet | `405 NOT ALLOWED` | Supprime le projet (Si la requête provient de l'auteur du projet ou d'un membre admin)
+
 ```python
-# ==========
-# à suivre
-# ==========
+# ================================
+#          À SUIVRE
+# ================================
 ```

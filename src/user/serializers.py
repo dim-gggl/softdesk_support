@@ -19,19 +19,9 @@ class UserSerializer(serializers.ModelSerializer):
             "password": {"write_only": True}
         }
 
-    def create(self, validated_data):
-        try:
-            user = User.objects.create_user(**validated_data)
-            return user
-        except Exception as e:
-            raise serializers.ValidationError({"Error": str(e)})
+    def validate_username(self, value):
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("Username already exists.")
+        return value
 
-    def update(self, instance, validated_data):
-        if "password" in validated_data:
-            instance.set_password(validated_data["password"])
-            validated_data.pop("password")
 
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        instance.save()
-        return instance

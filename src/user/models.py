@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, UserManager, PermissionsMixin
 from django.core.validators import MinValueValidator, MaxLengthValidator, MaxValueValidator
+from django.utils.translation import gettext_lazy as _
 
 
 class CustomUserManager(UserManager):
@@ -25,14 +26,14 @@ class User(AbstractUser):
     - Account creation date is automatically recorded.
     """
     age = models.PositiveIntegerField(
-        validators=[MinValueValidator(15), MaxValueValidator(99)],
-        help_text="User must be at least 15 years old."
+        validators=[MinValueValidator(15)],
+        help_text="Must be at least 15 years old."
     )
-    password = models.CharField(max_length=128)
+    password = models.CharField(max_length=50)
     username = models.CharField(
         validators=[MaxLengthValidator(100)],
         unique=True,
-        help_text="Unique username for the user."
+        help_text="Unique username to display"
     )
     first_name = models.CharField(
         max_length=30,
@@ -42,20 +43,15 @@ class User(AbstractUser):
     last_name = models.CharField(
         max_length=30,
         blank=True,
-        validators=[MaxLengthValidator(30)]
+        validators=[MaxLengthValidator(40)]
     )
     can_be_contacted = models.BooleanField(
-        default=True,
+        default=False,
         help_text="Allow SoftDesk to contact you about your projects.",
-        verbose_name="I accept to receive emails from SoftDesk Support ?"
     )
     can_data_be_shared = models.BooleanField(
-        default=True,
+        default=False,
         help_text="Allow your data to be shared with third parties.",
-        verbose_name=(
-            "I accept SoftDesk Support to share my data with "
-            "third parties ?"
-        )
     )
     date_created = models.DateTimeField(auto_now_add=True)
     email = models.EmailField(
