@@ -1,6 +1,7 @@
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+
 from .models import User
 from .serializers import UserSerializer
 from .permissions import IsAdminOrIsSelf, IsSelf
@@ -21,18 +22,6 @@ class UserViewSet(ModelViewSet):
             case _:
                 permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
-
-        # if self.action == "create":
-        #     permission_classes = [AllowAny]
-        # elif self.action == "retrieve":
-        #     permission_classes = [IsAuthenticated, IsAdminOrIsSelf]
-        # elif self.action in ["update", "partial_update", "destroy"]:
-        #     permission_classes = [IsAuthenticated, IsSelf]
-        # elif self.action == "list":
-        #     permission_classes = [IsAuthenticated]
-        # else:
-        #     permission_classes = [IsAuthenticated]
-        # return [permission() for permission in permission_classes]
 
     def get_queryset(self):
 
@@ -60,13 +49,14 @@ class UserViewSet(ModelViewSet):
             )
         return queryset
 
-
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         data = [
-            {"id": user["id"],
-            "username": user["username"]}
+            {
+                "id": user["id"],
+                "username": user["username"]
+            }
             for user in serializer.data
         ]
         return Response(data)

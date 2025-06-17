@@ -1,12 +1,15 @@
 import uuid
 
 from django.db import models
-from django.conf import settings
+from django.contrib.auth import get_user_model
+
+
+User = get_user_model()
 
 
 class TimeStampedModel(models.Model):
     author = models.ForeignKey(
-        to=settings.AUTH_USER_MODEL,
+        to=User,
         on_delete=models.CASCADE,
         related_name="%(class)ss"
     )
@@ -30,7 +33,7 @@ class Project(TimeStampedModel):
 
 class Contributor(models.Model):
     user = models.ForeignKey(
-        to=settings.AUTH_USER_MODEL,
+        to=User,
         on_delete=models.CASCADE,
         related_name="contributions",
     )
@@ -39,6 +42,7 @@ class Contributor(models.Model):
         on_delete=models.CASCADE,
         related_name="contributors"
     )
+
     class Meta:
         unique_together = ("user", "project")
 
@@ -48,19 +52,19 @@ class Contributor(models.Model):
 
 class Issue(TimeStampedModel):
     PRIORITIES = [
-        ("low","LOW"),
-        ("medium","MEDIUM"),
-        ("high","HIGH")
+        ("low", "LOW"),
+        ("medium", "MEDIUM"),
+        ("high", "HIGH")
     ]
     LABELS = [
-        ("bug","BUG"),
-        ("feature","FEATURE"),
-        ("task","TASK")
+        ("bug", "BUG"),
+        ("feature", "FEATURE"),
+        ("task", "TASK")
     ]
     STATUSES = [
-        ("todo","TODO"),
-        ("in_progress","IN_PROGRESS"),
-        ("finished","FINISHED")
+        ("todo", "TODO"),
+        ("in_progress", "IN_PROGRESS"),
+        ("finished", "FINISHED")
     ]
 
     title = models.CharField(max_length=255)

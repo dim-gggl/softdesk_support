@@ -8,6 +8,7 @@ from user.serializers import UserSerializer
 
 User = get_user_model()
 
+
 class ContributorSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     class Meta:
@@ -36,6 +37,19 @@ class ContributorValidationMixin:
                 })
         return data
 
+
+class CommentSerializer(
+    ContributorValidationMixin,
+    serializers.ModelSerializer
+    ):
+    contributor_fields = ["author"]
+
+    class Meta:
+        model = Comment
+        fields = "__all__"
+        read_only_fields = ["id", "author", "created_time", "issue"]
+
+
 class IssueSerializer(
     ContributorValidationMixin,
     serializers.ModelSerializer
@@ -44,6 +58,7 @@ class IssueSerializer(
         queryset=User.objects.all()
     )
     contributor_fields = ["author", "assignee"]
+    comments = serializers.SerializerMethodField()
 
     class Meta:
         model = Issue
@@ -51,7 +66,8 @@ class IssueSerializer(
             "id", "title",
             "description",
             "project",
-            "assignee"
+            "assignee",
+            "comments"
         ]
         read_only_fields = ["id"]
 
@@ -59,17 +75,10 @@ class IssueSerializer(
         validated_data["author"] = self.context["request"].user
         return super().create(validated_data)
 
-class CommentSerializer(
-    ContributorValidationMixin,
-    serializers.ModelSerializer
-):
-    contributor_fields = ["author"]
-
-    class Meta:
-        model = Comment
-        fields = "__all__"
-        read_only_fields = ["id", "author", "created_time", "issue"]
-
+    def get_comments(self, instance):
+        queryset = instance.comments.all()
+        serializer = CommentSerializer(queryset, many=True)
+        return serializer.data
 
 
 class ProjectListSerializer(serializers.ModelSerializer):
@@ -91,6 +100,7 @@ class ProjectListSerializer(serializers.ModelSerializer):
 class ProjectDetailSerializer(serializers.ModelSerializer):
     author = serializers.StringRelatedField(read_only=True)
     contributors = serializers.SerializerMethodField()
+    issues = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
@@ -99,7 +109,8 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
             "description",
             "type", "author",
             "created_time",
-            "contributors"
+            "contributors",
+            "issues"
         ]
         read_only_fields = [
             "id", "author",
@@ -111,4 +122,7 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
         serializer = ContributorSerializer(queryset, many=True)
         return serializer.data
 
-
+    def get_issues(self, instance):
+        queryset = instance.issues.all()
+        serializer = IssueSerializer(queryset, many=True)
+        return serializer.data

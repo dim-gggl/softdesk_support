@@ -93,7 +93,7 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "USERNAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "USERNAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator", # noqa
     },
     {
         "USERNAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
@@ -142,9 +142,9 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
     ),
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination", # noqa
     "PAGE_SIZE": 5,
-    "DEFAULT_FILTER_BACKENDS": ['django_filters.rest_framework.DjangoFilterBackend']
+    "DEFAULT_FILTER_BACKENDS": ['django_filters.rest_framework.DjangoFilterBackend'] # noqa
 }
 
 from datetime import timedelta

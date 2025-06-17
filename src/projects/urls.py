@@ -1,5 +1,8 @@
 from rest_framework_nested import routers
-from .views import ProjectViewSet, ContributorViewSet, IssueViewSet, CommentViewSet
+from .views import (
+    ProjectViewSet, ContributorViewSet,
+    IssueViewSet, CommentViewSet
+)
 
 router = routers.SimpleRouter()
 router.register(r"projects", ProjectViewSet)
