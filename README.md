@@ -173,6 +173,13 @@ Il est possible d'afficher la liste de tous les utilisateurs inscrits :
 |`api/projects/` | Liste des projets où vous êtes membre. | Crée un nouveau projet. |`405 NOT ALLOWED`|
 | `api/projects/<int:project_id>/` | Détails du projet (auteur, type, etc.) |`405 NOT ALLOWED`| Supprime (auteur/admin) |
 
+| Filtre | Description |
+| :-- | :-- |
+| `name` | Filtrer par nom du projet|
+| `author__username` | Filtrer par nom d'utilisateur de l'auteur |
+| `type` | Filtrer par type de projet|
+| `id` | Filtrer par identifiant du projet |
+
 *Seuls les contributeurs peuvent consulter ces endpoints.*
 
 ### -- CONTRIBUTORS (Contributeurs) --
@@ -182,23 +189,43 @@ Il est possible d'afficher la liste de tous les utilisateurs inscrits :
 |`api/projects/{project_id}/contributors/` |Liste des membres du projet. | Ajoute un contributeur\* | `405 NOT ALLOWED`|
 | `api/projects/{project_id}/contributors/{id}/` | Détails d’une contribution (utilisateur). | `405 NOT ALLOWED`| Retire un contributeur\* |
 
+| Filtre | Description |
+| :-- | :-- |
+| `is_author` | Filtrer par statut d'auteur (True/False) |
+| `username`| Filtrer par nom d'utilisateur |
+| `id`| Filtrer par identifiant|
+
 *Seul l’auteur du projet peut ajouter ou supprimer un contributeur.*
 
 ### -- ISSUES (Tickets) --
 
-| ENDPOINT | GET | POST | DELETE |
-| :-: | :-: | :-: | :-: |
-| `api/projects/{project_id}/issues/`|Liste des issues (paginated).|Crée une issue\* | `405 NOT ALLOWED`|
-| `api/projects/{project_id}/issues/{issue_id}/` | Détails de l’issue (statut, assignee, etc.) | `405 NOT ALLOWED` | Supprime une issue\* |
+|ENDPOINT|GET|POST|DELETE|
+|:-:|:-:|:-:|:-:|
+|`api/projects/{project_id}/issues/`|Liste des issues (paginated).|Crée une issue\*|`405 NOT ALLOWED`|
+|`api/projects/{project_id}/issues/{issue_id}/`|Détails de l’issue (statut, assignee, etc.)|`405 NOT ALLOWED`|Supprime une issue\*|
+
+**Quelques filtres**
+
+| Filtre | Description |
+| :-- | :-- |
+| `priority` | Priorité du ticket |
+| `label` | Étiquette associée |
+| `status` | Statut du ticket |
+| `assignee_id` | Identifiant de l'assigné |
+| `is_finished` | Indique si le ticket est terminé |
+| `to_do` | Indique si le ticket est à faire |
+| `urgent` | Indique si le ticket est urgent |
 
 *Tous les contributeurs peuvent créer et consulter ; seuls les auteurs peuvent modifier/supprimer une issue.*
 
 ### -- COMMENTS (Commentaires) --
 
-| ENDPOINT |GET| POST| DELETE|
-| :------------------------------------------------------------------: | :-----------------------: | :---------------------: | :-----------------------: |
+| ENDPOINT | GET | POST | DELETE |
+| :-: | :-: | :-: | :-: |
 |`api/projects/{project_id}/issues/{issue_id}/comments/` |Liste des commentaires.| Ajoute un commentaire\* | `405 NOT ALLOWED` |
 | `api/projects/{project_id}/issues/{issue_id}/comments/{comment_id}/` | Détails d’un commentaire. |`405 NOT ALLOWED`| Supprime un commentaire\* |
+
+
 
 *Tous les contributeurs peuvent commenter ; seuls les auteurs de commentaires peuvent les supprimer.*
 
@@ -207,55 +234,11 @@ Il est possible d'afficher la liste de tous les utilisateurs inscrits :
 Toutes les listes (projects, issues, comments) sont paginées par défaut (5 éléments par page).
 Vous pouvez ajuster via les paramètres `?limit=<n>&offset=<m>`.
 
-### -- PROJECTS --
 
-*Seuls les contributeurs peuvent consulter ces endpoints.*
+```python
+# =====================================
+#              À SUIVRE
+# =====================================
+````
 
-#### Filtres
 
-| Filtre | Description |
-| :-- | :-- |
-| name | Filtrer par nom du projet|
-| author__username | Filtrer par nom d'utilisateur de l'auteur |
-| type | Filtrer par type de projet|
-| id | Filtrer par identifiant du projet |
-
-### -- CONTRIBUTORS (Contributeurs) --
-
-| Champ| Description|
-|------------|------------------------------|
-| is_author| Indique si l'utilisateur est auteur (booléen) |
-| username | Nom d'utilisateur du contributeur |
-| id | Identifiant du contributeur |
-
-#### Filtres
-
-| Filtre | Description |
-| :-- | :-- |
-| is_author | Filtrer par statut d'auteur (True/False) |
-| username| Filtrer par nom d'utilisateur |
-| id| Filtrer par identifiant|
-
-### -- ISSUES (Tickets) --
-
-| Filtre | Description |
-| :-- | :-- |
-| priority| Priorité du ticket|
-| label | Étiquette associée|
-| status| Statut du ticket |
-| assignee_id | Identifiant de l'assigné|
-| is_finished | Indique si le ticket est terminé |
-| to_do | Indique si le ticket est à faire |
-| urgent| Indique si le ticket est urgent |
-
-#### Filtres
-
-| Filtre | Description |
-| :-- | :-- |
-| priority| Filtrer par priorité du ticket |
-| label | Filtrer par étiquette associée |
-| status| Filtrer par statut du ticket|
-| assignee_id | Filtrer par identifiant de l'assigné |
-| is_finished | Filtrer par état terminé (True/False)|
-| to_do | Filtrer par état à faire (True/False) |
-| urgent| Filtrer par état urgent (True/False)|
