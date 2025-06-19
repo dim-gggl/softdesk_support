@@ -1,0 +1,19 @@
+{% extends "rest_framework/base.html" %}
+{% load static %}
+
+{% block bootstrap_theme %}
+    <link type="text/css" rel="stylesheet" href="{% static "soft_desk_support/bootstrap.min.css" %}"/>
+    <link type="text/css" rel="stylesheet" href="{% static "soft_desk_support/bootstrap.css" %}"/>
+{% endblock %}
+
+{% block navbar %}
+  <nav class="navbar navbar-expand-lg bg-primary" data-bs-theme="light">
+    <div class="container-fluid">
+      {% block branding %}
+        <a class='navbar-brand' rel="nofollow" href='https://github.com/dim-gggl/softdesk_support'>
+          Soft Desk Support
+        </a>
+      {% endblock %}
+    </div>
+  </nav>
+{% endblock%}

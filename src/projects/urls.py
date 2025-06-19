@@ -13,17 +13,17 @@ projects_router = routers.NestedSimpleRouter(
 projects_router.register(
     r"contributors",
     ContributorViewSet,
-    basename="project-contributors"
+    basename="project_contributors"
 )
 projects_router.register(
-    r"issues", IssueViewSet, basename="project-issues"
+    r"issues", IssueViewSet, basename="project_issues"
 )
 
 issues_router = routers.NestedSimpleRouter(
     projects_router, r"issues", lookup="issue"
 )
 issues_router.register(
-    r"comments", CommentViewSet, basename="issue-comments"
+    r"comments", CommentViewSet, basename="issue_comments"
 )
 
 urlpatterns = router.urls + projects_router.urls + issues_router.urls

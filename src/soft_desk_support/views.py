@@ -1,7 +1,7 @@
-# from django.http import request
-# from django.shortcuts import render
+from user.views import UserViewSet
+from projects.views import ProjectViewSet, ContributorViewSet, IssueViewSet, CommentViewSet
+from django.views.generic import RedirectView
 
 
-# def index_view():
-#     request = request
-#     return render("index.html")
+class RootRedirectView(RedirectView):
+    url = "api/"
