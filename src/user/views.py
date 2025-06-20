@@ -29,7 +29,8 @@ class UserViewSet(ModelViewSet):
         """
         Returns appropriate permissions based on the action:
         - create: open to anyone
-        - retrieve: requires user to be authenticated and either the user or admin
+        - retrieve: requires user to be authenticated and either the 
+        user or admin
         - update, partial_update, destroy: only the user themselves
         - other actions: authenticated users only
         """

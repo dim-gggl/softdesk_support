@@ -3,6 +3,13 @@ import uuid
 from django.db import models
 from django.contrib.auth import get_user_model
 
+from .const import (
+    ISSUE_LABELS as LABELS,
+    ISSUE_PRIORITIES as PRIORITIES,
+    ISSUE_STATUSES as STATUSES,
+    PROJECT_TYPES as TYPES,
+)
+
 
 User = get_user_model()
 
@@ -33,12 +40,11 @@ class Project(TimeStampedModel, models.Model):
     - description: optional text description of the project
     - author and created_time: inherited from TimeStampedModel
     """
-    TYPES = ["back-end", "front-end", "ios", "android"]
     name = models.CharField(max_length=128)
     type = models.CharField(
         max_length=20,
         choices=[
-            (type.upper(), type) for type in TYPES
+            (type, type.lower()) for type in TYPES
         ],
     )
     description = models.TextField(blank=True, null=True)
@@ -46,12 +52,14 @@ class Project(TimeStampedModel, models.Model):
 
 class Contributor(models.Model):
     """
-    Intermediate model linking users and projects to represent contributors.
+    Intermediate model linking users and projects to represent 
+    contributors.
 
     Each pair (user, project) must be unique.
 
     Methods:
-    - is_author(): returns True if the contributor is the project author
+    - is_author(): returns True if the contributor is the project 
+    author
     """
     user = models.ForeignKey(
         to=User,
@@ -74,7 +82,8 @@ class Contributor(models.Model):
 
 class Issue(TimeStampedModel, models.Model):
     """
-    Issue model representing a task, bug, or feature within a project.
+    Issue model representing a task, bug, or feature within 
+    a project.
 
     Attributes:
     - title, description: basic information
@@ -85,9 +94,6 @@ class Issue(TimeStampedModel, models.Model):
     - project: the related project
     - author and created_time: inherited from TimeStampedModel
     """
-    PRIORITIES = ["LOW", "MEDIUM", "HIGH"]
-    LABELS = ["BUG", "FEATURE", "TASK"]
-    STATUSES = ["TODO", "IN_PROGRESS", "FINISHED"]
 
     title = models.CharField(max_length=255)
     description = models.TextField(

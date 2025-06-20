@@ -1,11 +1,12 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, UserManager
-from django.core.validators import MinValueValidator, MaxLengthValidator
+from django.core.validators import MinValueValidator, MaxValueValidator, MaxLengthValidator
 
 
 class CustomUserManager(UserManager):
     """
-    Custom user manager that ensures the `age` field is populated when creating a superuser.
+    Custom user manager that ensures the `age` field is populated 
+    when creating a superuser.
     Sets a default age of 25 if not provided.
     """
     def create_superuser(
@@ -22,13 +23,15 @@ class CustomUserManager(UserManager):
 
 class User(AbstractUser):
     """
-    Custom User model extending Django's AbstractUser for SoftDesk Support.
+    Custom User model extending Django's AbstractUser for SoftDesk 
+    Support.
 
     Fields:
     - age: Required integer >= 15 (default for superuser: 25)
     - username: Unique, max 100 characters
     - email: Optional but must be unique
-    - first_name, last_name: Optional fields with respective max lengths
+    - first_name, last_name: Optional fields with respective max 
+    lengths
     - can_be_contacted: Opt-in for SoftDesk communications
     - can_data_be_shared: Opt-in for third-party data sharing
     - date_created: Auto-generated when account is created
@@ -37,7 +40,7 @@ class User(AbstractUser):
     - Orders users by newest (`-date_joined`)
     """
     age = models.PositiveIntegerField(
-        validators=[MinValueValidator(15), MaxLengthValidator(99)],
+        validators=[MinValueValidator(15), MaxValueValidator(99)],
         help_text="min. 15-years-old."
     )
     username = models.CharField(
@@ -79,7 +82,8 @@ class User(AbstractUser):
 
     def save(self, *args, **kwargs):
         """
-        Overrides save to allow future extensions; currently just calls parent method.
+        Overrides save to allow future extensions; currently just 
+        calls parent method.
         """
         super(User, self).save(*args, **kwargs)
         return self

@@ -22,16 +22,16 @@ User = get_user_model()
 
 class DetailListMixin(ModelViewSet):
     """
-    Mixin class to determine which serializer to use depending on the view
-    context.
+    Mixin class to determine which serializer to use depending 
+    on the view context.
 
     - `serializer_class`: used for list and create actions.
     - `detail_serializer_class`: used for retrieve action.
-    - `minimal_serializer`: used for nested or non-detailed contexts (e.g.,
-    when included in another serializer).
+    - `minimal_serializer`: used for nested or non-detailed 
+    contexts (e.g., when included in another serializer).
 
-    This abstraction helps reduce boilerplate code in viewsets with multiple
-    serializer needs.
+    This abstraction helps reduce boilerplate code in viewsets 
+    with multiple serializer needs.
     """
     serializer_class = ""
     detail_serializer_class = ""
@@ -51,13 +51,15 @@ class AuthorModelMixin:
     Mixin to centralize permission logic for views.
 
     - Always requires authenticated users.
-    - Adds `IsAuthor` permission for update, partial_update, and destroy
-    actions.
+    - Adds `IsAuthor` permission for update, partial_update, and 
+    destroy actions.
     - Adds `IsContributor` permission for all other actions.
     """
     def get_permissions(self):
         perms = [IsAuthenticated()]
-        if self.action in ["update", "partial_update", "destroy"]:
+        if self.action in [
+            "update", "partial_update", "destroy"
+            ]:
             perms.append(IsAuthor())
         else:
             perms.append(IsContributor())
@@ -72,10 +74,12 @@ class ProjectViewSet(
     """
     ViewSet for managing Project objects.
 
-    - Uses different serializers for list, detail, and nested views.
-    - Automatically creates a Contributor entry for the author when a
-    project is created.
-    - Applies filtering on name, author username, type, and id.
+    - Uses different serializers for list, detail, and 
+    nested views.
+    - Automatically creates a Contributor entry for the 
+    author when a project is created.
+    - Applies filtering on name, author username, type, 
+    and id.
     """
     queryset = Project.objects.all()
     serializer_class = ProjectListSerializer
@@ -90,9 +94,9 @@ class ProjectViewSet(
         "id"
     ]
 
-    # It redefines perform_create in order to make the fact that when
-    # a Project is created, one contributor is also, everytime : the
-    # Project's Author.
+    # It redefines perform_create in order to make the 
+    # fact that when a Project is created, one contributor 
+    # is also, everytime : the Project's Author.
     def perform_create(self, serializer):
         project = serializer.save(author=self.request.user)
         Contributor.objects.create(
@@ -107,8 +111,8 @@ class ContributorViewSet(AuthorModelMixin, ModelViewSet):
     ViewSet for managing Contributor objects.
 
     - Filters contributors by project_id.
-    - Assigns project and user explicitly during creation based on URL
-    kwargs.
+    - Assigns project and user explicitly during creation 
+    based on URL kwargs.
     """
     serializer_class = ContributorSerializer
 
@@ -139,7 +143,8 @@ class IssueViewSet(
 
     - Uses context-aware serializers.
     - Filters issues by project_id.
-    - Automatically assigns author and project during creation.
+    - Automatically assigns author and project 
+    during creation.
     """
     serializer_class = IssueListSerializer
     detail_serializer_class = IssueDetailSerializer
@@ -168,7 +173,8 @@ class CommentViewSet(
 
     - Uses context-aware serializers.
     - Filters comments by issue_pk.
-    - Automatically assigns author and issue during creation.
+    - Automatically assigns author and issue 
+    during creation.
     """
     serializer_class = CommentDetailSerializer
     detail_serializer_class = CommentDetailSerializer

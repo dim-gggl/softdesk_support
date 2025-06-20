@@ -49,7 +49,8 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
     def validate_email(self, value=None):
         """
-        Validates that the email is either not provided, or unique if provided.
+        Validates that the email is either not provided, or unique 
+        if provided.
         """
         if value:
             if User.objects.filter(email=value).exists():

@@ -33,15 +33,20 @@ class ContributorSerializer(ModelSerializer):
 
 class ContributorValidationMixin:
     """
-    Mixin to validate that users involved in an action are contributors to the project.
-    Ensures that only users who are valid contributors (author, assignee, etc.)
-    can be associated with project-related objects such as issues or comments.
+    Mixin to validate that users involved in an action are 
+    contributors to the project.
+    Ensures that only users who are valid contributors 
+    (author, assignee, etc.)
+    can be associated with project-related objects such 
+    as issues or comments.
     """
     contributor_fields = []
 
     def validate(self, data):
         data = super().validate(data)
-        project = self.context.get("project") or data["project"] or data["issue"].project
+        project = self.context.get(
+            "project"
+        ) or data["project"] or data["issue"].project
         for field in self.contributor_fields:
             user = data.get(field)
             if user and not user.contribution_links.filter(
@@ -73,7 +78,8 @@ class CommentListSerializer(ModelSerializer):
 
     def create(self, validated_data):
         """
-        Overrides default creation logic to set the author from the request
+        Overrides default creation logic to set the author 
+        from the request
         and assign the comment to the provided issue.
         """
         self.fields = [
@@ -81,7 +87,9 @@ class CommentListSerializer(ModelSerializer):
             "author", "issue"
         ]
         author = self.request.user
-        issue = self.context.get("issue") or validated_data["issue"]
+        issue = self.context.get(
+            "issue"
+        ) or validated_data["issue"]
         comment = Comment(
             author=author,
             content=validated_data["content"],
@@ -97,7 +105,8 @@ class CommentDetailSerializer(
     ):
     """
     Detailed serializer for comment objects.
-    Includes contributor validation and read-only fields for author and issue.
+    Includes contributor validation and read-only 
+    fields for author and issue.
     """
     contributor_fields = ["author"]
 
@@ -111,12 +120,15 @@ class CommentDetailSerializer(
             "issue"
         ]
 
+
 class CommentMinimalSerializer(ModelSerializer):
     """
     Minimal representation of a comment.
     Returns only comment ID and author ID.
     """
-    comment_id = IntegerField(source="id", read_only=True)
+    comment_id = IntegerField(
+        source="id", read_only=True
+    )
     author_id = IntegerField(read_only=True)
 
     class Meta:
@@ -124,10 +136,10 @@ class CommentMinimalSerializer(ModelSerializer):
         fields = ["comment_id", "author_id"]
 
 
-
 class IssueSerializerMixin(ModelSerializer):
     """
-    Mixin for issue serializers, providing shared logic such as comment count.
+    Mixin for issue serializers, providing shared logic such 
+    as comment count.
     """
     comments_count = SerializerMethodField()
 
@@ -137,9 +149,11 @@ class IssueSerializerMixin(ModelSerializer):
 
     def get_comments_count(self, instance):
         """
-        Returns the number of comments linked to this issue instance.
+        Returns the number of comments linked to this 
+        issue instance.
         """
         return instance.comments.count()
+
 
 class IssueListSerializer(
     IssueSerializerMixin,
@@ -162,7 +176,8 @@ class IssueDetailSerializer(
     ModelSerializer
     ):
     """
-    Detailed serializer for issues with contributor validation.
+    Detailed serializer for issues with contributor 
+    validation.
     Includes logic for setting the author on creation.
     """
     assignee = PrimaryKeyRelatedField(
@@ -177,7 +192,8 @@ class IssueDetailSerializer(
 
     def create(self, validated_data):
         """
-        Sets the request user as the author when creating a new issue.
+        Sets the request user as the author when creating 
+        a new issue.
         """
         validated_data["author"] = self.context["request"].user
         return super().create(validated_data)
@@ -255,7 +271,8 @@ class ProjectDetailSerializer(ModelSerializer):
 
     def get_contributors(self, instance):
         """
-        Returns serialized data for all contributors linked to the project.
+        Returns serialized data for all contributors linked 
+        to the project.
         """
         queryset = instance.contributor_links.all()
         serializer = ContributorSerializer(queryset, many=True)
@@ -263,7 +280,8 @@ class ProjectDetailSerializer(ModelSerializer):
 
     def get_issues(self, instance):
         """
-        Returns minimal serialized data for all issues linked to the project.
+        Returns minimal serialized data for all issues linked 
+        to the project.
         """
         queryset = instance.issues.all()
         serializer = IssueMinimalSerializer(queryset, many=True)

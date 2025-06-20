@@ -11,9 +11,6 @@ from soft_desk_support.views import (
     CommentViewSet,
 )
 
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView, TokenRefreshView
-)
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')
@@ -42,6 +39,4 @@ urlpatterns = [
     path('', include(router.urls)),
     path('', include(projects_router.urls)),
     path('', include(issues_router.urls)),
-    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]

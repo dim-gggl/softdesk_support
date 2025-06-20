@@ -9,5 +9,6 @@ import api_urls
 urlpatterns = [
     path("", RootRedirectView.as_view()),
     path('admin/', admin.site.urls),
+    path("api/", include("authentication.urls")),
     path('api/', include(api_urls)),
 ]
