@@ -1,6 +1,7 @@
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+
 from .models import User
 from .serializers import UserDetailSerializer
 from .permissions import IsAdminOrIsSelf, IsSelf

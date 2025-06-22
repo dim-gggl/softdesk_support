@@ -10,8 +10,13 @@ from rest_framework.serializers import (
 )
 
 from .models import Project, Contributor, Issue, Comment
-from .const import ISSUE_LIST_FIELDS
-
+from .const import (
+    ISSUE_LIST_FIELDS,
+    ISSUE_LABELS as LABELS,
+    ISSUE_PRIORITIES as PRIORITIES,
+    ISSUE_STATUSES as STATUSES,
+    PROJECT_TYPES as TYPES
+)
 
 User = get_user_model()
 
@@ -33,20 +38,36 @@ class ContributorSerializer(ModelSerializer):
 
 class ContributorValidationMixin:
     """
-    Mixin to validate that users involved in an action are 
-    contributors to the project.
+    Base class for contributor validation mixins.
     Ensures that only users who are valid contributors 
-    (author, assignee, etc.)
-    can be associated with project-related objects such 
-    as issues or comments.
+    (author, assignee, etc.) can be associated with
+    project-related objects such as issues or comments.
+
+    This mixin is designed to be used as a base class 
+    for serializers that need to validate that users 
+    involved in an action are contributors to the 
+    project.
+    
+    :param contributor_fields: List of fields that 
+    should be validated as contributors (e.g., author, 
+    assignee, contributors, etc)
     """
     contributor_fields = []
 
     def validate(self, data):
+        """
+        Validates that the users involved in an action are 
+        contributors to the project.
+        """
         data = super().validate(data)
+
+        # Get the project from the context or data
         project = self.context.get(
             "project"
         ) or data["project"] or data["issue"].project
+
+        # Iterate over the contributor fields and validate 
+        #that the user is a contributor to the project
         for field in self.contributor_fields:
             user = data.get(field)
             if user and not user.contribution_links.filter(
@@ -61,12 +82,16 @@ class ContributorValidationMixin:
         return data
 
 
-class CommentListSerializer(ModelSerializer):
+class CommentListSerializer(
+    ContributorValidationMixin, 
+    ModelSerializer
+    ):
     """
     Serializer for listing comments.
     Includes id, author, and content.
     """
-
+    contributor_fields = ["author"]
+    
     class Meta:
         model = Comment
         fields = [
@@ -79,13 +104,11 @@ class CommentListSerializer(ModelSerializer):
     def create(self, validated_data):
         """
         Overrides default creation logic to set the author 
-        from the request
-        and assign the comment to the provided issue.
+        from the request and assign the comment to the
+        provided issue.
         """
-        self.fields = [
-            "id", "content",
-            "author", "issue"
-        ]
+        validated_data = super().validate(validated_data)
+        self.fields = ["content"]
         author = self.request.user
         issue = self.context.get(
             "issue"
@@ -113,49 +136,22 @@ class CommentDetailSerializer(
     class Meta:
         model = Comment
         fields = "__all__"
-        read_only_fields = [
-            "id",
-            "author",
-            "created_time",
-            "issue"
-        ]
+        read_only_fields = ["id"]
 
 
-class CommentMinimalSerializer(ModelSerializer):
-    """
-    Minimal representation of a comment.
-    Returns only comment ID and author ID.
-    """
-    comment_id = IntegerField(
-        source="id", read_only=True
-    )
-    author_id = IntegerField(read_only=True)
-
-    class Meta:
-        model = Comment
-        fields = ["comment_id", "author_id"]
-
-
-class IssueSerializerMixin(ModelSerializer):
+class IssueSerializerMixin:
     """
     Mixin for issue serializers, providing shared logic such 
     as comment count.
     """
     comments_count = SerializerMethodField()
 
-    class Meta:
-        model = Issue
-        fields = ISSUE_LIST_FIELDS
-
     def get_comments_count(self, instance):
-        """
-        Returns the number of comments linked to this 
-        issue instance.
-        """
         return instance.comments.count()
 
 
 class IssueListSerializer(
+    ContributorValidationMixin,
     IssueSerializerMixin,
     ModelSerializer
     ):
@@ -190,16 +186,20 @@ class IssueDetailSerializer(
         fields = "__all__"
         read_only_fields = ["id"]
 
-    def create(self, validated_data):
+    def create(self, *args, **validated_data):
         """
         Sets the request user as the author when creating 
         a new issue.
         """
         validated_data["author"] = self.context["request"].user
-        return super().create(validated_data)
+        return super().create(**validated_data)
 
 
-class IssueMinimalSerializer(IssueSerializerMixin, ModelSerializer):
+class IssueMinimalSerializer(
+    ContributorValidationMixin,
+    IssueSerializerMixin, 
+    ModelSerializer
+    ):
     """
     Minimal serializer for issues.
     Returns only issue ID, author ID, and comment count.
@@ -242,7 +242,8 @@ class ProjectListSerializer(ModelSerializer):
         return value
 
 
-class ProjectDetailSerializer(ModelSerializer):
+class ProjectDetailSerializer(
+    ContributorValidationMixin, ModelSerializer):
     """
     Detailed serializer for projects.
     Includes contributors and associated issues.
@@ -288,7 +289,9 @@ class ProjectDetailSerializer(ModelSerializer):
         return serializer.data
 
 
-class ProjectMinimalSerializer(ModelSerializer):
+class ProjectMinimalSerializer(
+    ContributorValidationMixin, ModelSerializer
+    ):
     """
     Minimal serializer for project representation.
     Includes project ID and author ID.

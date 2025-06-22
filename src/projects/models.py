@@ -154,3 +154,6 @@ class Comment(TimeStampedModel, models.Model):
         related_name="comments"
     )
     content = models.TextField(max_length=250)
+
+    class Meta:
+        ordering = ["-created_time"]

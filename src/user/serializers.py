@@ -16,7 +16,6 @@ class UserListSerializer(serializers.ModelSerializer):
         model = User
         fields = ["id", "username"]
 
-
 class UserDetailSerializer(serializers.ModelSerializer):
     """
     Detailed serializer for user profiles.
@@ -27,8 +26,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
     - Optional email
     - Read-only fields: id, date_created
     """
-    id = serializers.ReadOnlyField()
-    date_created = serializers.ReadOnlyField()
+    date_joined = serializers.ReadOnlyField()
 
     class Meta:
         model = User
@@ -36,7 +34,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "id", "username", "password", "email",
             "first_name", "last_name", "age",
             "can_be_contacted", "can_data_be_shared",
-            "date_created"
+            "date_joined"
         ]
 
     def validate_username(self, value):

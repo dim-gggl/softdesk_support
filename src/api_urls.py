@@ -1,7 +1,7 @@
 from django.urls import include, path
 
 from rest_framework.routers import DefaultRouter
-from rest_framework_nested import routers
+from rest_framework_nested.routers import NestedSimpleRouter
 
 from soft_desk_support.views import (
     UserViewSet,
@@ -16,7 +16,7 @@ router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')
 router.register(r"projects", ProjectViewSet)
 
-projects_router = routers.NestedSimpleRouter(
+projects_router = NestedSimpleRouter(
     router, r"projects", lookup="project"
 )
 projects_router.register(
@@ -28,7 +28,7 @@ projects_router.register(
     r"issues", IssueViewSet, basename="project_issues"
 )
 
-issues_router = routers.NestedSimpleRouter(
+issues_router = NestedSimpleRouter(
     projects_router, r"issues", lookup="issue"
 )
 issues_router.register(

@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, UserManager
-from django.core.validators import MinValueValidator, MaxValueValidator, MaxLengthValidator
+from django.core.validators import (
+    MinValueValidator, MaxValueValidator, MaxLengthValidator
+)
 
 
 class CustomUserManager(UserManager):
@@ -72,7 +74,7 @@ class User(AbstractUser):
             " in order to customize your experience."
         )
     )
-    date_created = models.DateTimeField(auto_now_add=True)
+    date_joined = models.DateTimeField(auto_now_add=True)
     email = models.EmailField(
         null=True,
         help_text="Unique email address for the user.",

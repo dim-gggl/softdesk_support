@@ -56,13 +56,11 @@ class AuthorModelMixin:
     - Adds `IsContributor` permission for all other actions.
     """
     def get_permissions(self):
-        perms = [IsAuthenticated()]
+        perms = [IsAuthenticated(), IsContributor()]
         if self.action in [
             "update", "partial_update", "destroy"
             ]:
             perms.append(IsAuthor())
-        else:
-            perms.append(IsContributor())
         return perms
 
 
@@ -85,13 +83,10 @@ class ProjectViewSet(
     serializer_class = ProjectListSerializer
     detail_serializer_class = ProjectDetailSerializer
     minimal_serializer = ProjectMinimalSerializer
-    permission_classes = [IsAuthenticated]
 
     filterset_fields = [
-        "name",
-        "author__username",
-        "type",
-        "id"
+        "name", "author__username", "type", "id",
+        "created_time", "author__id"
     ]
 
     # It redefines perform_create in order to make the 
@@ -104,6 +99,11 @@ class ProjectViewSet(
             project=project
         )
 
+    def get_queryset(self):
+        user = self.request.user
+        return self.queryset.filter(
+            contributor_links__user=user
+        )
 
 
 class ContributorViewSet(AuthorModelMixin, ModelViewSet):
@@ -117,8 +117,7 @@ class ContributorViewSet(AuthorModelMixin, ModelViewSet):
     serializer_class = ContributorSerializer
 
     filterset_fields = [
-        "is_author=True", "is_author=False",
-        "username", "id",
+        "project_id", "user_id", "id", "user__username"
     ]
 
     def get_queryset(self):
@@ -151,8 +150,10 @@ class IssueViewSet(
     minimal_serializer = IssueMinimalSerializer
     filterset_fields = [
         "priority", "label", "status", "assignee_id",
-        "is_finished", "to_do", "urgent",
+        "is_finished", "to_do", "author_id", "id",
+        "created_time", "project_id", "assignee_id"
     ]
+
     def get_queryset(self):
         return Issue.objects.filter(
             project_id=self.kwargs["project_id"]
@@ -179,6 +180,12 @@ class CommentViewSet(
     serializer_class = CommentDetailSerializer
     detail_serializer_class = CommentDetailSerializer
     minimal_serializer = CommentDetailSerializer
+    filterset_fields = [
+        "issue_id",
+        "author_id",
+        "id",
+        "created_time",
+    ]
 
     def get_queryset(self):
         return Comment.objects.filter(

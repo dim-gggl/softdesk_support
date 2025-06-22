@@ -1,4 +1,6 @@
 Django==5.2.3
 djangorestframework==3.16.0
-djangorestframework-simplejwt==5.5.10
-pyjwt==2.9.0
+djangorestframework-simplejwt==5.5.0
+django-filter==25.1
+drf-nested-routers==0.94.2
+flake8==7.2.0
