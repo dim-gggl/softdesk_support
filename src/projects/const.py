@@ -29,3 +29,41 @@ PROJECT_TYPES = [
     "IOS",
     "ANDROID",
 ]
+
+PROJECT_ERROR_MESSAGE = {
+    "name": "",
+    "type": "BACKEND | FRONTEND | IOS | ANDROID",
+    "description": "",
+    "message": (
+        "Missing or invalid fields. "
+        "Check 'name', 'type'."
+    )
+}
+
+ISSUE_ERROR_MESSAGE = {
+    "title": "",
+    "label": "BUG | FEATURE | TASK",
+    "priority": "LOW | MEDIUM | HIGH",
+    "status": "TODO | IN_PROGRESS | FINISHED",
+    "message": (
+        "Missing or invalid fields. "
+        "Check 'title', 'label', 'priority'."
+    )
+}
+
+COMMENT_ERROR_MESSAGE = {
+    "content": "",
+    "message": (
+        "Missing or invalid fields. "
+        "Check 'content'."
+    )
+}
+
+CONTRIBUTOR_ERROR_MESSAGE = {
+    "user": "{Must be a valid user ID}",
+    "project": "{Must be a valid project ID}",
+    "message": (
+        "Missing or invalid fields. "
+        "Check 'user', 'project'."
+    )
+}

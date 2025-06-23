@@ -1,3 +1,31 @@
+"""
+Serializers for the projects app.
+
+Since, in this repository, most of the objects are nested,
+the serializers are quite complex.
+
+They are organized in the following way:
+
+    - The Mixins which are used to add shared logic to the 
+    serializers.
+    (e.g in order to centralize the permissions logic)
+
+    - The List Serializers which are used to list the objects.
+    (e.g when the user wants the list of projects, issues, comments, 
+    etc.)
+
+    - The Detail Serializers which are used to retrieve or create 
+    the objects.
+    (e.g when the user wants the details of a project, issue, comment, 
+    etc.)
+
+    - The Minimal Serializers which are used to list the objects
+    in a minimal way when they are nested in a listed object.
+    (e.g when the user wants the details of a project, he won't see
+    all the issues listed in the project but will get the Minimal Serializer
+    of the issues)
+"""
+
 from django.contrib.auth import get_user_model
 
 from rest_framework.serializers import (
@@ -30,62 +58,57 @@ class ContributorSerializer(ModelSerializer):
         read_only_fields = ["id"]
 
 
-class ContributorValidationMixin:
-    """
-    Base class for contributor validation mixins.
-    Ensures that only users who are valid contributors
-    (author, assignee, etc.) can be associated with
-    project-related objects such as issues or comments.
+# class ContributorValidationMixin:
+#     """
+#     Base class for contributor validation mixins.
+#     Ensures that only users who are valid contributors
+#     (author, assignee, etc.) can be associated with
+#     project-related objects such as issues or comments.
 
-    This mixin is designed to be used as a base class
-    for serializers that need to validate that users
-    involved in an action are contributors to the
-    project.
+#     This mixin is designed to be used as a base class
+#     for serializers that need to validate that users
+#     involved in an action are contributors to the
+#     project.
 
-    :param contributor_fields: List of fields that
-    should be validated as contributors (e.g., author,
-    assignee, contributors, etc)
-    """
-    contributor_fields = []
+#     :param contributor_fields: List of fields that
+#     should be validated as contributors (e.g., author,
+#     assignee, contributors, etc)
+#     """
+#     contributor_fields = []
 
-    def validate(self, data):
-        """
-        Validates that the users involved in an action are
-        contributors to the project.
-        """
-        data = super().validate(data)
+#     def validate(self, data):
+#         """
+#         Validates that the user involved in an action is a
+#         contributor to the project.
+#         """
+#         validated_data = super().validate(data)
 
-        # Get the project from the context or data
-        project = self.context.get(
-            "project"
-        ) or data["project"] or data["issue"].project
+#         # Get the project from the context or data
+#         project = self.context.get(
+#             "project"
+#         ) or validated_data["project"] or validated_data["issue"].project
 
-        # Iterate over the contributor fields and validate
-        # that the user is a contributor to the project
-        for field in self.contributor_fields:
-            user = data.get(field)
-            if user and not user.contribution_links.filter(
-                project=project
-            ).exists():
-                raise ValidationError({
-                    field: (
-                        "This user is not a contributor to "
-                        "this project."
-                    )
-                })
-        return data
+#         # Iterate over the contributor fields and validate
+#         # that the user is a contributor to the project
+#         for field in self.contributor_fields:
+#             user = validated_data.get(field)
+#             if user and not user.contribution_links.filter(
+#                 project=project
+#             ).exists():
+#                 raise ValidationError({
+#                     field: (
+#                         "This user is not a contributor to "
+#                         "this project."
+#                     )
+#                 })
+#         return validated_data
 
 
-class CommentListSerializer(
-    ContributorValidationMixin,
-    ModelSerializer
-    ):
+class CommentListSerializer(ModelSerializer):
     """
     Serializer for listing comments.
     Includes id, author, and content.
     """
-    contributor_fields = ["author"]
-
     class Meta:
         model = Comment
         fields = [
@@ -94,38 +117,31 @@ class CommentListSerializer(
             "content"
         ]
 
-    def create(self, validated_data):
+    def create(self, request, *args, **kwargs):
         """
         Overrides default creation logic to set the author
         from the request and assign the comment to the
         provided issue.
         """
-        validated_data = super().validate(validated_data)
-        self.fields = ["content"]
-        author = self.request.user
-        issue = self.context.get(
-            "issue"
-        ) or validated_data["issue"]
+        author = request.user
+        issue = request.data.get("issue")
         comment = Comment(
             author=author,
-            content=validated_data["content"],
+            content=request.data["content"],
             issue=issue
         )
         comment.save()
-        return comment
+        return Response(
+            CommentSerializer(comment).data,
+            status=status.HTTP_201_CREATED
+        )
 
-
-class CommentDetailSerializer(
-    ContributorValidationMixin,
-    ModelSerializer
-    ):
+class CommentDetailSerializer(ModelSerializer):
     """
     Detailed serializer for comment objects.
     Includes contributor validation and read-only
     fields for author and issue.
     """
-    contributor_fields = ["author"]
-
     class Meta:
         model = Comment
         fields = "__all__"
@@ -144,7 +160,6 @@ class IssueSerializerMixin:
 
 
 class IssueListSerializer(
-    ContributorValidationMixin,
     IssueSerializerMixin,
     ModelSerializer
     ):
@@ -161,7 +176,6 @@ class IssueListSerializer(
 
 class IssueDetailSerializer(
     IssueSerializerMixin,
-    ContributorValidationMixin,
     ModelSerializer
     ):
     """
@@ -172,25 +186,15 @@ class IssueDetailSerializer(
     assignee = PrimaryKeyRelatedField(
         queryset=User.objects.all()
     )
-    contributor_fields = ["author", "assignee"]
     comments_count = SerializerMethodField()
 
     class Meta:
         model = Issue
         fields = "__all__"
-        read_only_fields = ["id", "author"]
-
-    def create(self, *args, **validated_data):
-        """
-        Sets the request user as the author when creating
-        a new issue.
-        """
-        validated_data["author"] = self.context["request"].user
-        return super().create(**validated_data)
+        read_only_fields = ["id", "author", "created_time"]
 
 
 class IssueMinimalSerializer(
-    ContributorValidationMixin,
     IssueSerializerMixin,
     ModelSerializer
     ):
@@ -236,9 +240,7 @@ class ProjectListSerializer(ModelSerializer):
         return value
 
 
-class ProjectDetailSerializer(
-    ContributorValidationMixin, ModelSerializer
-    ):
+class ProjectDetailSerializer(ModelSerializer):
     """
     Detailed serializer for projects.
     Includes contributors and associated issues.
@@ -284,9 +286,7 @@ class ProjectDetailSerializer(
         return serializer.data
 
 
-class ProjectMinimalSerializer(
-    ContributorValidationMixin, ModelSerializer
-    ):
+class ProjectMinimalSerializer(ModelSerializer):
     """
     Minimal serializer for project representation.
     Includes project ID and author ID.
