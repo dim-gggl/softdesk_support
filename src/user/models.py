@@ -14,7 +14,7 @@ class CustomUserManager(UserManager):
     def create_superuser(
             self, username, email=None,
             password=None, **extra_fields
-        ):
+    ):
         if "age" not in extra_fields:
             extra_fields["age"] = 25
         return super().create_superuser(
@@ -89,6 +89,15 @@ class User(AbstractUser):
         """
         super(User, self).save(*args, **kwargs)
         return self
+
+    def is_contributor(self, project):
+        return project in self.contribution_links.all()
+
+    def is_author(self, obj):
+        return self.id == obj.author.id
+
+    def is_assignee(self, issue):
+        return self.id == issue.assignee.id
 
     def __str__(self):
         """

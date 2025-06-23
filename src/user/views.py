@@ -30,7 +30,7 @@ class UserViewSet(ModelViewSet):
         """
         Returns appropriate permissions based on the action:
         - create: open to anyone
-        - retrieve: requires user to be authenticated and either the 
+        - retrieve: requires user to be authenticated and either the
         user or admin
         - update, partial_update, destroy: only the user themselves
         - other actions: authenticated users only
@@ -78,7 +78,6 @@ class UserViewSet(ModelViewSet):
             )
         return queryset
 
-
     def list(self, request, *args, **kwargs):
         """
         Returns a list of users with only their id and username exposed.
@@ -86,8 +85,10 @@ class UserViewSet(ModelViewSet):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         data = [
-            {"id": user["id"],
-            "username": user["username"]}
+            {
+                "id": user["id"],
+                "username": user["username"]
+            }
             for user in serializer.data
         ]
         return Response(data)

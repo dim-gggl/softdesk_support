@@ -22,15 +22,15 @@ User = get_user_model()
 
 class DetailListMixin(ModelViewSet):
     """
-    Mixin class to determine which serializer to use depending 
+    Mixin class to determine which serializer to use depending
     on the view context.
 
     - `serializer_class`: used for list and create actions.
     - `detail_serializer_class`: used for retrieve action.
-    - `minimal_serializer`: used for nested or non-detailed 
+    - `minimal_serializer`: used for nested or non-detailed
     contexts (e.g., when included in another serializer).
 
-    This abstraction helps reduce boilerplate code in viewsets 
+    This abstraction helps reduce boilerplate code in viewsets
     with multiple serializer needs.
     """
     serializer_class = ""
@@ -51,7 +51,7 @@ class AuthorModelMixin:
     Mixin to centralize permission logic for views.
 
     - Always requires authenticated users.
-    - Adds `IsAuthor` permission for update, partial_update, and 
+    - Adds `IsAuthor` permission for update, partial_update, and
     destroy actions.
     - Adds `IsContributor` permission for all other actions.
     """
@@ -59,7 +59,7 @@ class AuthorModelMixin:
         perms = [IsAuthenticated(), IsContributor()]
         if self.action in [
             "update", "partial_update", "destroy"
-            ]:
+        ]:
             perms.append(IsAuthor())
         return perms
 
@@ -72,11 +72,11 @@ class ProjectViewSet(
     """
     ViewSet for managing Project objects.
 
-    - Uses different serializers for list, detail, and 
+    - Uses different serializers for list, detail, and
     nested views.
-    - Automatically creates a Contributor entry for the 
+    - Automatically creates a Contributor entry for the
     author when a project is created.
-    - Applies filtering on name, author username, type, 
+    - Applies filtering on name, author username, type,
     and id.
     """
     queryset = Project.objects.all()
@@ -89,8 +89,8 @@ class ProjectViewSet(
         "created_time", "author__id"
     ]
 
-    # It redefines perform_create in order to make the 
-    # fact that when a Project is created, one contributor 
+    # It redefines perform_create in order to make the
+    # fact that when a Project is created, one contributor
     # is also, everytime : the Project's Author.
     def perform_create(self, serializer):
         project = serializer.save(author=self.request.user)
@@ -111,7 +111,7 @@ class ContributorViewSet(AuthorModelMixin, ModelViewSet):
     ViewSet for managing Contributor objects.
 
     - Filters contributors by project_id.
-    - Assigns project and user explicitly during creation 
+    - Assigns project and user explicitly during creation
     based on URL kwargs.
     """
     serializer_class = ContributorSerializer
@@ -142,7 +142,7 @@ class IssueViewSet(
 
     - Uses context-aware serializers.
     - Filters issues by project_id.
-    - Automatically assigns author and project 
+    - Automatically assigns author and project
     during creation.
     """
     serializer_class = IssueListSerializer
@@ -150,19 +150,18 @@ class IssueViewSet(
     minimal_serializer = IssueMinimalSerializer
     filterset_fields = [
         "priority", "label", "status", "assignee_id",
-        "is_finished", "to_do", "author_id", "id",
-        "created_time", "project_id", "assignee_id"
+        "author_id", "id", "created_time", "project__id"
     ]
 
     def get_queryset(self):
         return Issue.objects.filter(
-            project_id=self.kwargs["project_id"]
+            project_id=self.kwargs["project_pk"]
         )
 
     def perform_create(self, serializer):
         serializer.save(
             author=self.request.user,
-            project_id=self.kwargs["project_id"]
+            project_id=self.kwargs["project_pk"]
         )
 
 
@@ -174,7 +173,7 @@ class CommentViewSet(
 
     - Uses context-aware serializers.
     - Filters comments by issue_pk.
-    - Automatically assigns author and issue 
+    - Automatically assigns author and issue
     during creation.
     """
     serializer_class = CommentDetailSerializer

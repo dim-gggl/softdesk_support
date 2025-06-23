@@ -1,7 +1,7 @@
 """
 ASGI config for soft_desk_support project.
 
-It exposes the ASGI callable as a module-level variable named 
+It exposes the ASGI callable as a module-level variable named
 ``application``.
 
 For more information on this file, see

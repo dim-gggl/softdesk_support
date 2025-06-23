@@ -44,7 +44,7 @@ class Project(TimeStampedModel, models.Model):
     type = models.CharField(
         max_length=20,
         choices=[
-            (type, type.lower()) for type in TYPES
+            (t, t.lower()) for t in TYPES
         ],
     )
     description = models.TextField(blank=True, null=True)
@@ -52,13 +52,13 @@ class Project(TimeStampedModel, models.Model):
 
 class Contributor(models.Model):
     """
-    Intermediate model linking users and projects to represent 
+    Intermediate model linking users and projects to represent
     contributors.
 
     Each pair (user, project) must be unique.
 
     Methods:
-    - is_author(): returns True if the contributor is the project 
+    - is_author(): returns True if the contributor is the project
     author
     """
     user = models.ForeignKey(
@@ -82,7 +82,7 @@ class Contributor(models.Model):
 
 class Issue(TimeStampedModel, models.Model):
     """
-    Issue model representing a task, bug, or feature within 
+    Issue model representing a task, bug, or feature within
     a project.
 
     Attributes:

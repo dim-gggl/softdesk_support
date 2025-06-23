@@ -16,6 +16,7 @@ class UserListSerializer(serializers.ModelSerializer):
         model = User
         fields = ["id", "username"]
 
+
 class UserDetailSerializer(serializers.ModelSerializer):
     """
     Detailed serializer for user profiles.
