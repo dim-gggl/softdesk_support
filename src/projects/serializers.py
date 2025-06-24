@@ -164,8 +164,7 @@ class IssueListSerializer(
     ModelSerializer
     ):
     """
-    Serializer for listing issues.
-    Includes comment count and author.
+    This serializer is mostly used to 
     """
     comments_count = SerializerMethodField()
 

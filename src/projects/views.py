@@ -207,9 +207,13 @@ class IssueViewSet(
         )
 
     def perform_create(self, serializer):
-        serializer.save(
+        issue = serializer.save(    
             author=self.request.user,
             project_id=self.kwargs["project_pk"]
+        )
+        Contributor.objects.create(
+            user=issue.author,
+            project=issue.project
         )
 
 
@@ -243,7 +247,7 @@ class CommentViewSet(
         )
 
     def perform_create(self, serializer):
-        serializer.save(
+        comment = serializer.save(  
             author=self.request.user,
             issue_id=self.kwargs["issue_pk"]
         )
