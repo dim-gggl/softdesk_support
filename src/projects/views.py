@@ -245,7 +245,8 @@ class CommentViewSet(
     ViewSet for managing Comment objects.
 
     - Uses context-aware serializers.
-    - Filters comments by issue_pk, author_id, id and created_time.
+    - Filters comments by issue_pk, author_id, id 
+    and created_time.
     - Automatically assigns author and issue
     during creation.
     """

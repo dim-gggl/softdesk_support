@@ -74,5 +74,8 @@ IS_AUTHOR_FALSE_MESSAGE = {
     "message": "False. Contributor is not the author of the project."
 }
 CONTRIBUTOR_UNAUTHORIZED_MESSAGE = {
-    "message": "This information is only available to the contributors of the project."
+    "message": (
+        "This information is only available to "
+        "the contributors of the project."
+    )
 }
