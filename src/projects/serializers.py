@@ -53,28 +53,21 @@ class ContributorSerializer(ModelSerializer):
 
     class Meta:
         model = Contributor
-        fields = ["id"]
-        read_only_fields = ["id"]
-        extra_kwargs = {
-            "user": {"queryset": User.objects.all(), "read_only": True},
-            "project": {"read_only": True}
-        }
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Contributor.objects.all(),
-                fields=["project", "user"],
-                message=(
-                    "This user is already contributing "
-                    "to the project"
-                )
-            )
-        ]
+        fields = ["id", "user", "project"]
+        read_only_fields = ["id", "project"]
 
-    def validate_user(self, value):
-        validator = self.validators[0]
-        if Contribution.objects.filter(user=value).exists:
-            raise validator.message()
-            
+    def validate(self, attrs):
+        project_id = self.context["view"].kwargs.get("project_pk")
+        user = attrs.get("user")
+        if Contributor.objects.filter(
+            user=user, 
+            project_id=project_id
+        ).exists():
+            raise ValidationError(
+                "This user is already contributing "
+                "to the project"
+            )
+        return attrs
 
 
 class CommentSerializer(ModelSerializer):

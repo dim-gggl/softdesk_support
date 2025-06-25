@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework import status
@@ -16,7 +16,7 @@ from .serializers import (
     IssueMinimalSerializer,
     CommentSerializer,
 )
-from .permissions import IsAuthor, IsContributor
+from .permissions import IsAuthorOrIsAdmin, IsContributor, IsAssignee
 from .const import (
     PROJECT_ERROR_MESSAGE,
     ISSUE_ERROR_MESSAGE,
@@ -61,7 +61,7 @@ class AuthorModelMixin:
     Mixin to centralize permission logic for views.
 
     - Always requires authenticated users.
-    - Adds the `IsAuthor` permission for update 
+    - Adds the `IsAuthorOrIsAdmin` permission for update 
     (`update`, `partial_update`) and delete (`destroy`) 
     actions.
     - Adds the `IsContributor` permission for all 
@@ -72,7 +72,7 @@ class AuthorModelMixin:
         if self.action in [
             "update", "partial_update", "destroy"
         ]:
-            perms.append(IsAuthor)
+            perms.append(IsAuthorOrIsAdmin)
         return [perm() for perm in perms]
 
 
@@ -151,7 +151,6 @@ class ProjectViewSet(
 
 
 class ContributorViewSet(
-    AuthorModelMixin,
     ErrorResponseMixin,
     ModelViewSet
     ):
@@ -162,38 +161,37 @@ class ContributorViewSet(
     - Assigns project and user explicitly during creation
     based on URL kwargs.
     """
+    permission_classes = [IsAuthenticated, IsContributor, IsAdminUser]
     serializer_class = ContributorSerializer
 
     filterset_fields = [
         "project_id", "user_id", "id", "user__username"
     ]
 
+    def get_permissions(self):
+        if self.action in ["list",]:
+            return [IsContributor()]
+        else:
+            return [IsAuthorOrIsAdmin()]
+        
+
     def get_queryset(self):
         queryset = Contributor.objects.filter(
             project=self.kwargs["project_pk"]
         )
-
-        params = self.request.query_params
-
-        is_author = params.get("is_author")
-        if is_author:
-            is_author_response = queryset.is_author()
-            if is_author_response :
-                return Response(
-                    IS_AUTHOR_TRUE_MESSAGE,
-                    status=status.HTTP_200_OK
-                )
+        is_author = self.request.query_params.get("is_author")
+        if is_author is not None:
+            project = queryset.first().project if queryset.exists() else None
+            if project:
+                queryset = queryset.filter(user=project.author)
             else:
-                return Response(
-                    IS_AUTHOR_FALSE_MESSAGE,
-                    status=status.HTTP_200_OK
-                )
+                queryset = queryset.none()
         return queryset
 
     def perform_create(self, serializer):
         serializer.save(
             project_id=self.kwargs["project_pk"],
-            user_id=self.kwargs["user_pk"]
+            user_id=self.request.data.get("user")
         )
 
 
