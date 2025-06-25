@@ -37,6 +37,8 @@ from rest_framework.serializers import (
     IntegerField
 )
 
+from rest_framework.validators import UniqueTogetherValidator
+
 from .models import Project, Contributor, Issue, Comment
 from .const import ISSUE_LIST_FIELDS
 
@@ -51,92 +53,31 @@ class ContributorSerializer(ModelSerializer):
 
     class Meta:
         model = Contributor
-        fields = ["id", "project"]
-        extra_kwargs = {
-            "user": {"queryset": User.objects.all()}
-        }
+        fields = ["id"]
         read_only_fields = ["id"]
-
-
-# class ContributorValidationMixin:
-#     """
-#     Base class for contributor validation mixins.
-#     Ensures that only users who are valid contributors
-#     (author, assignee, etc.) can be associated with
-#     project-related objects such as issues or comments.
-
-#     This mixin is designed to be used as a base class
-#     for serializers that need to validate that users
-#     involved in an action are contributors to the
-#     project.
-
-#     :param contributor_fields: List of fields that
-#     should be validated as contributors (e.g., author,
-#     assignee, contributors, etc)
-#     """
-#     contributor_fields = []
-
-#     def validate(self, data):
-#         """
-#         Validates that the user involved in an action is a
-#         contributor to the project.
-#         """
-#         validated_data = super().validate(data)
-
-#         # Get the project from the context or data
-#         project = self.context.get(
-#             "project"
-#         ) or validated_data["project"] or validated_data["issue"].project
-
-#         # Iterate over the contributor fields and validate
-#         # that the user is a contributor to the project
-#         for field in self.contributor_fields:
-#             user = validated_data.get(field)
-#             if user and not user.contribution_links.filter(
-#                 project=project
-#             ).exists():
-#                 raise ValidationError({
-#                     field: (
-#                         "This user is not a contributor to "
-#                         "this project."
-#                     )
-#                 })
-#         return validated_data
-
-
-class CommentListSerializer(ModelSerializer):
-    """
-    Serializer for listing comments.
-    Includes id, author, and content.
-    """
-    class Meta:
-        model = Comment
-        fields = [
-            "id",
-            "author",
-            "content"
+        extra_kwargs = {
+            "user": {"queryset": User.objects.all(), "read_only": True},
+            "project": {"read_only": True}
+        }
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Contributor.objects.all(),
+                fields=["project", "user"],
+                message=(
+                    "This user is already contributing "
+                    "to the project"
+                )
+            )
         ]
 
-    def create(self, request, *args, **kwargs):
-        """
-        Overrides default creation logic to set the author
-        from the request and assign the comment to the
-        provided issue.
-        """
-        author = request.user
-        issue = request.data.get("issue")
-        comment = Comment(
-            author=author,
-            content=request.data["content"],
-            issue=issue
-        )
-        comment.save()
-        return Response(
-            CommentSerializer(comment).data,
-            status=status.HTTP_201_CREATED
-        )
+    def validate_user(self, value):
+        validator = self.validators[0]
+        if Contribution.objects.filter(user=value).exists:
+            raise validator.message()
+            
 
-class CommentDetailSerializer(ModelSerializer):
+
+class CommentSerializer(ModelSerializer):
     """
     Detailed serializer for comment objects.
     Includes contributor validation and read-only
@@ -145,7 +86,7 @@ class CommentDetailSerializer(ModelSerializer):
     class Meta:
         model = Comment
         fields = "__all__"
-        read_only_fields = ["id"]
+        read_only_fields = ["id", "author", "issue"]
 
 
 class IssueSerializerMixin:

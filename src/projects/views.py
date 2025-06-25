@@ -14,14 +14,17 @@ from .serializers import (
     IssueDetailSerializer,
     IssueListSerializer,
     IssueMinimalSerializer,
-    CommentDetailSerializer,
+    CommentSerializer,
 )
 from .permissions import IsAuthor, IsContributor
 from .const import (
     PROJECT_ERROR_MESSAGE,
     ISSUE_ERROR_MESSAGE,
     COMMENT_ERROR_MESSAGE,
-    CONTRIBUTOR_ERROR_MESSAGE
+    CONTRIBUTOR_ERROR_MESSAGE,
+    IS_AUTHOR_TRUE_MESSAGE,
+    IS_AUTHOR_FALSE_MESSAGE,
+    CONTRIBUTOR_UNAUTHORIZED_MESSAGE
 )
 
 User = get_user_model()
@@ -166,9 +169,26 @@ class ContributorViewSet(
     ]
 
     def get_queryset(self):
-        return Contributor.objects.filter(
+        queryset = Contributor.objects.filter(
             project=self.kwargs["project_pk"]
         )
+
+        params = self.request.query_params
+
+        is_author = params.get("is_author")
+        if is_author:
+            is_author_response = queryset.is_author()
+            if is_author_response :
+                return Response(
+                    IS_AUTHOR_TRUE_MESSAGE,
+                    status=status.HTTP_200_OK
+                )
+            else:
+                return Response(
+                    IS_AUTHOR_FALSE_MESSAGE,
+                    status=status.HTTP_200_OK
+                )
+        return queryset
 
     def perform_create(self, serializer):
         serializer.save(
@@ -207,7 +227,7 @@ class IssueViewSet(
         )
 
     def perform_create(self, serializer):
-        issue = serializer.save(    
+        serializer.save(    
             author=self.request.user,
             project_id=self.kwargs["project_pk"]
         )
@@ -231,9 +251,7 @@ class CommentViewSet(
     - Automatically assigns author and issue
     during creation.
     """
-    serializer_class = CommentDetailSerializer
-    detail_serializer_class = CommentDetailSerializer
-    minimal_serializer = CommentDetailSerializer
+    serializer_class = CommentSerializer
 
     error_message = COMMENT_ERROR_MESSAGE
 
