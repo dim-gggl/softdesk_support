@@ -1,4 +1,243 @@
-# <div align="center"> 🖇️ Soft Desk Support
+# <div align="center"> 🇬🇧 Soft Desk Support 🖇️
+
+## <div align="center"> REST API
+
+## 1 – Clone the Repo
+
+Copy/Paste the following command into your terminal:
+*(To clone the project and move to the root folder)*
+
+```bash
+git clone https://github.com/dim-gggl/softdesk_support.git
+cd softdesk_support
+```
+
+## 2 – Virtual Environment & Dependencies
+
+The project was initialised with `poetry`, so the environment and all the dependencies can be installed with one command:
+
+```bash
+poetry install
+```
+
+Then, depending on the version of `poetry` you have:
+
+```bash
+poetry shell
+```
+
+> **Heads‑up** – this command is deprecated, so prefer:
+
+```bash
+eval $(poetry env activate)
+```
+
+If you don’t have `poetry`, you can still create a virtual environment and install the dependencies via `requirements.txt` :
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+---
+
+## 3 – Environment Variable
+
+To avoid hard‑coding the Django secret key, it’s stored in the `.env` file at the project root. You can display it easily and copy it with:
+
+```bash
+cat .env
+```
+
+Copy the key, then export it:
+
+```bash
+export DJANGO_SECRET_KEY=<YOUR_SECRET_KEY>
+```
+
+## 4 – Start the Server
+
+Everything’s set up – time to test the API.
+
+```bash
+python3 src/manage.py runserver
+```
+
+If your terminal prints something like:
+
+```bash
+Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+June 12, 2025 – 18:29:59
+Django version 5.2.3, using settings 'soft_desk_support.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL‑C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+```
+
+…then everything’s working fine.
+
+## 5 – How the API Works
+
+First, you need to obtain a **token** to access any data.
+
+Two options:
+
+### 1. Sign up on the Soft Desk platform
+
+Customise the following profile:
+
+```json
+{
+  "username": "<YOUR_USERNAME>",
+  "password": "<YOUR_PASSWORD>",
+  "age": 15,
+  // 15 is the minimum age required by the app
+  "can_be_contacted": false,
+  // Set to false if you do NOT want to be contacted
+  "can_data_be_shared": false
+  // Same if you do NOT want your data shared with third‑party companies
+}
+```
+
+Then send it to the API.
+
+Via **cURL**:
+
+```bash
+curl -X POST "http://127.0.0.1:8000/api/users/" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "YOUR_USERNAME",
+    "password": "YOUR_PASSWORD",
+    "age": 15,
+    "can_be_contacted": true,
+    "can_data_be_shared": true
+  }'
+```
+
+…or with **Postman**, for example.
+
+Just drop the JSON in the body of a **POST** request to `http://127.0.0.1:8000/api/users/`.
+
+### 2 – Use this generic profile
+
+```json
+{
+  "username": "user_6",
+  "password": "azer"
+}
+```
+
+Send this JSON (or your own credentials) in the body of a **POST** request to `http://127.0.0.1:8000/api/token/`.
+
+The response will include your `access` token. Copy it (and keep it somewhere safe) and add it to the headers of any future API requests under the `Authorization` key.
+
+Example:
+
+```http
+Authorization: Bearer <YOUR_TOKEN>
+```
+
+## 6 – Resources
+
+### — USERS —
+
+You can list every registered user:
+
+|        ENDPOINT       |                 GET                |        POST       |             PUT/PATCH             |        DELETE        |
+| :-------------------: | :--------------------------------: | :---------------: | :-------------------------------: | :------------------: |
+|      `api/users/`     |      List all registered users     | Create a new user |         `405 NOT ALLOWED`         |   `405 NOT ALLOWED`  |
+| `api/users/<int:id>/` | Details for a user (self or admin) | `405 NOT ALLOWED` | Edit some or all fields of a user | Delete own account\* |
+
+\*Deletion is only possible by the user themself or an admin.
+
+**Useful filters**
+
+| Filter                       | Description                       |
+| :--------------------------- | :-------------------------------- |
+| `?username=<USERNAME>`       | Fetch a user by username          |
+| `?id=<USER_ID>`              | Fetch a user by ID                |
+| `?contact_ok=true/false`     | Filter by consent to be contacted |
+| `?data_shared_ok=true/false` | Filter by consent to share data   |
+
+---
+
+### — PROJECTS —
+
+|             ENDPOINT             |                  GET                 |         POST         |            PUT/PATCH            |         DELETE        |
+| :------------------------------: | :----------------------------------: | :------------------: | :-----------------------------: | :-------------------: |
+|          `api/projects/`         |      List projects you belong to     | Create a new project |        `405 NOT ALLOWED`        |   `405 NOT ALLOWED`   |
+| `api/projects/<int:project_id>/` | Project details (author, type, etc.) |   `405 NOT ALLOWED`  | Edit some or all project fields | Delete (author/admin) |
+
+| Filter             | Description                       |
+| :----------------- | :-------------------------------- |
+| `name`             | Filter by project name            |
+| `author__username` | Filter by project author username |
+| `type`             | Filter by project type            |
+| `id`               | Filter by project ID              |
+
+*Only contributors can hit these endpoints.*
+
+### — CONTRIBUTORS —
+
+|                    ENDPOINT                    |             GET             |         POST        |                   PUT/PATCH                  |         DELETE         |
+| :--------------------------------------------: | :-------------------------: | :-----------------: | :------------------------------------------: | :--------------------: |
+|    `api/projects/{project_id}/contributors/`   |     List project members    | Add a contributor\* |               `405 NOT ALLOWED`              |    `405 NOT ALLOWED`   |
+| `api/projects/{project_id}/contributors/{id}/` | Contribution details (user) |  `405 NOT ALLOWED`  | Edit some or all contributor‑relation fields | Remove a contributor\* |
+
+| Filter      | Description                          |
+| :---------- | :----------------------------------- |
+| `is_author` | Filter by author status (true/false) |
+| `username`  | Filter by username                   |
+| `id`        | Filter by contributor ID             |
+
+*Only the project author can add or remove a contributor.*
+
+### — ISSUES —
+
+|                    ENDPOINT                    |                   GET                  |        POST       |           PUT/PATCH           |       DELETE      |
+| :--------------------------------------------: | :------------------------------------: | :---------------: | :---------------------------: | :---------------: |
+|       `api/projects/{project_id}/issues/`      |         List issues (paginated)        | Create an issue\* |       `405 NOT ALLOWED`       | `405 NOT ALLOWED` |
+| `api/projects/{project_id}/issues/{issue_id}/` | Issue details (status, assignee, etc.) | `405 NOT ALLOWED` | Edit some or all issue fields | Delete an issue\* |
+
+**Some handy filters**
+
+| Filter        | Description                             |
+| :------------ | :-------------------------------------- |
+| `priority`    | Issue priority                          |
+| `label`       | Associated label                        |
+| `status`      | Issue status                            |
+| `assignee_id` | Assignee ID                             |
+| `is_finished` | Indicates whether the issue is finished |
+| `to_do`       | Indicates a to‑do issue                 |
+| `urgent`      | Indicates an urgent issue               |
+
+*All contributors can create and view; only authors can edit/delete an issue.*
+
+### — COMMENTS —
+
+|                               ENDPOINT                               |       GET       |        POST       |            PUT/PATCH            |       DELETE       |
+| :------------------------------------------------------------------: | :-------------: | :---------------: | :-----------------------------: | :----------------: |
+|        `api/projects/{project_id}/issues/{issue_id}/comments/`       |  List comments  |  Add a comment\*  |        `405 NOT ALLOWED`        |  `405 NOT ALLOWED` |
+| `api/projects/{project_id}/issues/{issue_id}/comments/{comment_id}/` | Comment details | `405 NOT ALLOWED` | Edit some or all comment fields | Delete a comment\* |
+
+*All contributors can comment; only comment authors can delete their own comments.*
+
+## 7 – Pagination
+
+All list endpoints (projects, issues, comments) are paginated by default (5 items per page).
+You can tweak this via the params `?limit=<n>&offset=<m>`.
+
+---  
+
+# <div align="center"> 🇫🇷 Soft Desk Support 🖇️
 
 ## <div align="center"> API REST
 
@@ -98,9 +337,12 @@ Pour se faire, personnalisez le profil suivant :
 {
 "username": "<VOTRE_PSEUDO>",
 "password": "<VOTRE_MOT_DE_PASSE>",
-"age": 15, // 15 ans est l'âge minimum requis pour l'app
-"can_be_contacted": false, // Remplacer par false si vous ne souhaitez pas être contacté(e)
-"can_data_be_shared": false, // Idem si vous ne souhaitez pas que vos données soient partagées avec des entreprises tierces
+"age": 15, 
+// 15 ans est l'âge minimum requis pour l'app
+"can_be_contacted": false, 
+// Remplacer par false si vous ne souhaitez pas être contacté(e)
+"can_data_be_shared": false, 
+// Idem si vous ne souhaitez pas que vos données soient partagées avec des entreprises tierces
 }
 ```
 
@@ -148,10 +390,10 @@ Authorization: Bearer <VOTRE_TOKEN>
 
 Il est possible d'afficher la liste de tous les utilisateurs inscrits :
 
-| ENDPOINT | GET | POST | DELETE |
-| :-: | :-: | :-: | :-: |
-|`api/users/` | Liste de tous les utilisateurs inscrits. | Crée un nouvel utilisateur | `405 NOT ALLOWED` |
-| `api/users/<int:id>/` | Détails d’un utilisateur (self ou admin) |`405 NOT ALLOWED` | Supprime son compte\* |
+| ENDPOINT | GET | POST | PUT/PATCH | DELETE |
+| :-: | :-: | :-: | :-: | :-: |
+|`api/users/` | Liste de tous les utilisateurs inscrits. | Crée un nouvel utilisateur | `405 NOT ALLOWED` | `405 NOT ALLOWED` |
+| `api/users/<int:id>/` | Détails d’un utilisateur (self ou admin) |`405 NOT ALLOWED` | Permet de modifier tout ou partie des infos d'un utilisateur | Supprime son compte\* |
 
 \*Suppression possible uniquement par l’utilisateur lui-même ou un admin.
 
@@ -168,10 +410,10 @@ Il est possible d'afficher la liste de tous les utilisateurs inscrits :
 
 ### -- PROJECTS --
 
-| ENDPOINT | GET | POST | DELETE |
-| :-: | :-: | :-: | :-: |
-|`api/projects/` | Liste des projets où vous êtes membre. | Crée un nouveau projet. |`405 NOT ALLOWED`|
-| `api/projects/<int:project_id>/` | Détails du projet (auteur, type, etc.) |`405 NOT ALLOWED`| Supprime (auteur/admin) |
+| ENDPOINT | GET | POST | PUT/PATCH | DELETE |
+| :-: | :-: | :-: | :-: | :-: |
+|`api/projects/` | Liste des projets où vous êtes membre. | Crée un nouveau projet. | `405 NOT ALLOWED` |`405 NOT ALLOWED`|
+| `api/projects/<int:project_id>/` | Détails du projet (auteur, type, etc.) |`405 NOT ALLOWED`| modifie tout ou partie des infos d'un projet | Supprime (auteur/admin) |
 
 | Filtre | Description |
 | :-- | :-- |
@@ -184,10 +426,10 @@ Il est possible d'afficher la liste de tous les utilisateurs inscrits :
 
 ### -- CONTRIBUTORS (Contributeurs) --
 
-| ENDPOINT | GET | POST | DELETE |
-| :-: | :-: | :-: | :-: |
-|`api/projects/{project_id}/contributors/` |Liste des membres du projet. | Ajoute un contributeur\* | `405 NOT ALLOWED`|
-| `api/projects/{project_id}/contributors/{id}/` | Détails d’une contribution (utilisateur). | `405 NOT ALLOWED`| Retire un contributeur\* |
+| ENDPOINT | GET | POST | PUT/PATCH | DELETE |
+| :-: | :-: | :-: | :-: | :-: |
+|`api/projects/{project_id}/contributors/` |Liste des membres du projet. | Ajoute un contributeur\* | `405 NOT ALLOWED` | `405 NOT ALLOWED`|
+| `api/projects/{project_id}/contributors/{id}/` | Détails d’une contribution (utilisateur). | `405 NOT ALLOWED`| modifie tout ou partie des infos d'une relation de contribution | Retire un contributeur\* |
 
 | Filtre | Description |
 | :-- | :-- |
@@ -199,10 +441,10 @@ Il est possible d'afficher la liste de tous les utilisateurs inscrits :
 
 ### -- ISSUES (Tickets) --
 
-|ENDPOINT|GET|POST|DELETE|
-|:-:|:-:|:-:|:-:|
-|`api/projects/{project_id}/issues/`|Liste des issues (paginated).|Crée une issue\*|`405 NOT ALLOWED`|
-|`api/projects/{project_id}/issues/{issue_id}/`|Détails de l’issue (statut, assignee, etc.)|`405 NOT ALLOWED`|Supprime une issue\*|
+|ENDPOINT|GET|POST|PUT/PATCH|DELETE|
+|:-:|:-:|:-:|:-:|:-:|
+|`api/projects/{project_id}/issues/`|Liste des issues (paginated).|Crée une issue\*|`405 NOT ALLOWED`|`405 NOT ALLOWED`|
+|`api/projects/{project_id}/issues/{issue_id}/`|Détails de l’issue (statut, assignee, etc.)|`405 NOT ALLOWED`|modifie tout ou partie des infos d'une issue|Supprime une issue\*|
 
 **Quelques filtres**
 
@@ -220,10 +462,10 @@ Il est possible d'afficher la liste de tous les utilisateurs inscrits :
 
 ### -- COMMENTS (Commentaires) --
 
-| ENDPOINT | GET | POST | DELETE |
-| :-: | :-: | :-: | :-: |
-|`api/projects/{project_id}/issues/{issue_id}/comments/` |Liste des commentaires.| Ajoute un commentaire\* | `405 NOT ALLOWED` |
-| `api/projects/{project_id}/issues/{issue_id}/comments/{comment_id}/` | Détails d’un commentaire. |`405 NOT ALLOWED`| Supprime un commentaire\* |
+| ENDPOINT | GET | POST |PUT/PATCH| DELETE |
+| :-: | :-: | :-: | :-: |:-:|
+|`api/projects/{project_id}/issues/{issue_id}/comments/` |Liste des commentaires.| Ajoute un commentaire\* | `405 NOT ALLOWED` |`405 NOT ALLOWED`|
+| `api/projects/{project_id}/issues/{issue_id}/comments/{comment_id}/` | Détails d’un commentaire. |`405 NOT ALLOWED`|modifie tout ou partie des infos d'un commentaire| Supprime un commentaire\* |
 
 
 
@@ -233,12 +475,3 @@ Il est possible d'afficher la liste de tous les utilisateurs inscrits :
 
 Toutes les listes (projects, issues, comments) sont paginées par défaut (5 éléments par page).
 Vous pouvez ajuster via les paramètres `?limit=<n>&offset=<m>`.
-
-
-```python
-# =====================================
-#              À SUIVRE
-# =====================================
-````
-
-
