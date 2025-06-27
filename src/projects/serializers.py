@@ -98,13 +98,20 @@ class IssueListSerializer(
     ModelSerializer
     ):
     """
-    This serializer is mostly used to 
+    Minimal serializer for issues.
+    Returns only issue ID, author ID, and comment count.
     """
+    issue_id = IntegerField(source="id", read_only=True)
+    author_id = IntegerField(read_only=True)
     comments_count = SerializerMethodField()
 
     class Meta:
         model = Issue
-        fields = ISSUE_LIST_FIELDS + ["author"]
+        fields = [
+            "issue_id",
+            "author_id",
+            "comments_count"
+        ]
 
 
 class IssueDetailSerializer(
@@ -125,27 +132,6 @@ class IssueDetailSerializer(
         model = Issue
         fields = "__all__"
         read_only_fields = ["id", "author", "created_time"]
-
-
-class IssueMinimalSerializer(
-    IssueSerializerMixin,
-    ModelSerializer
-    ):
-    """
-    Minimal serializer for issues.
-    Returns only issue ID, author ID, and comment count.
-    """
-    issue_id = IntegerField(source="id", read_only=True)
-    author_id = IntegerField(read_only=True)
-    comments_count = SerializerMethodField()
-
-    class Meta:
-        model = Issue
-        fields = [
-            "issue_id",
-            "author_id",
-            "comments_count"
-        ]
 
 
 class ProjectListSerializer(ModelSerializer):

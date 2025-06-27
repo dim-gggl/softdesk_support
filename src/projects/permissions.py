@@ -22,6 +22,9 @@ class IsContributor(BasePermission):
             project_id=project.id, user_id=request.user.id
         ).exists()
 
+class IsContributorOrIsAdmin(IsContributor):
+    def has_object_permission(self, request, view, obj):
+        return super().has_object_permission(request, view, obj) or request.user.is_staff
 
 class IsAssignee(BasePermission):
     def has_object_permission(self, request, view, obj):

@@ -3,7 +3,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 from .models import User
-from .serializers import UserDetailSerializer
+from .serializers import UserDetailSerializer, UserListSerializer
 from .permissions import IsAdminOrIsSelf, IsSelf
 
 
@@ -25,6 +25,11 @@ class UserViewSet(ModelViewSet):
     """
     queryset = User.objects.all()
     serializer_class = UserDetailSerializer
+
+    def get_serializer_class(self):
+            if self.action == 'list':
+                return UserListSerializer
+            return UserDetailSerializer
 
     def get_permissions(self):
         """
@@ -80,15 +85,14 @@ class UserViewSet(ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         """
-        Returns a list of users with only their id and username exposed.
+        Returns a list of users using UserListSerializer.
         """
-        queryset = self.get_queryset()
+        queryset = self.filter_queryset(self.get_queryset())
+        
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
         serializer = self.get_serializer(queryset, many=True)
-        data = [
-            {
-                "id": user["id"],
-                "username": user["username"]
-            }
-            for user in serializer.data
-        ]
-        return Response(data)
+        return Response(serializer.data)

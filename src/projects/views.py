@@ -13,10 +13,14 @@ from .serializers import (
     ContributorSerializer,
     IssueDetailSerializer,
     IssueListSerializer,
-    IssueMinimalSerializer,
     CommentSerializer,
 )
-from .permissions import IsAuthorOrIsAdmin, IsContributor, IsAssignee
+from .permissions import (
+    IsAuthorOrIsAdmin, 
+    IsContributor, 
+    IsAssignee, 
+    IsContributorOrIsAdmin
+)
 from .const import (
     PROJECT_ERROR_MESSAGE,
     ISSUE_ERROR_MESSAGE,
@@ -108,7 +112,6 @@ class ErrorResponseMixin(ModelViewSet):
 
 
 class ProjectViewSet(
-    AuthorModelMixin,
     DetailListMixin,
     ErrorResponseMixin,
     ModelViewSet
@@ -133,6 +136,14 @@ class ProjectViewSet(
         "created_time", "author__id"
     ]
 
+    def get_permissions(self):
+        if self.action == "create":
+            return [IsAuthenticated()]
+        elif self.action in ["list", "retrieve"]:
+            return [IsContributorOrIsAdmin()]
+        else:
+            return [IsAuthorOrIsAdmin()]
+
     # It redefines perform_create in order to make the
     # fact that when a Project is created, one contributor
     # is also, everytime : the Project's Author.
@@ -145,9 +156,16 @@ class ProjectViewSet(
 
     def get_queryset(self):
         user = self.request.user
-        return self.queryset.filter(
+        queryset = self.queryset.filter(
             contributor_links__user=user
         )
+        if self.action == 'retrieve':
+            queryset = queryset.select_related('author').prefetch_related(
+                'contributor_links__user', 
+                'issues__author', 
+                'issues__assignee'
+            )
+        return queryset
 
 
 class ContributorViewSet(
@@ -174,18 +192,27 @@ class ContributorViewSet(
         else:
             return [IsAuthorOrIsAdmin()]
         
-
     def get_queryset(self):
-        queryset = Contributor.objects.filter(
-            project=self.kwargs["project_pk"]
-        )
-        is_author = self.request.query_params.get("is_author")
-        if is_author is not None:
-            project = queryset.first().project if queryset.exists() else None
-            if project:
-                queryset = queryset.filter(user=project.author)
-            else:
-                queryset = queryset.none()
+        project_pk = self.kwargs.get("project_pk")
+        queryset = Contributor.objects.filter(project_id=project_pk)
+
+        queryset = queryset.select_related('user', 'project__author')
+
+        is_author_param = self.request.query_params.get("is_author")
+        if is_author_param is not None:
+            try:
+                # We already have project__author prefetched 
+                # if queryset is not empty,
+                # but to be safe and handle empty queryset, 
+                # we fetch the project directly.
+                project = Project.objects.select_related(
+                    'author'
+                ).get(pk=project_pk)
+                queryset = queryset.filter(
+                    user=project.author
+                )
+            except Project.DoesNotExist:
+                return queryset.none()
         return queryset
 
     def perform_create(self, serializer):
@@ -212,7 +239,7 @@ class IssueViewSet(
     """
     serializer_class = IssueListSerializer
     detail_serializer_class = IssueDetailSerializer
-    minimal_serializer = IssueMinimalSerializer
+    minimal_serializer = IssueListSerializer
     error_message = ISSUE_ERROR_MESSAGE
     filterset_fields = [
         "priority", "label", "status", "assignee_id",
@@ -220,16 +247,20 @@ class IssueViewSet(
     ]
 
     def get_queryset(self):
-        return Issue.objects.filter(
+        queryset = Issue.objects.filter(
             project_id=self.kwargs["project_pk"]
         )
+        if self.action in ['list', 'retrieve']:
+            queryset = queryset.select_related('author', 'assignee', 'project')
+        return queryset
 
     def perform_create(self, serializer):
-        serializer.save(    
+        issue = serializer.save(    
             author=self.request.user,
             project_id=self.kwargs["project_pk"]
         )
-        Contributor.objects.create(
+
+        Contributor.objects.get_or_create(
             user=issue.author,
             project=issue.project
         )
@@ -237,7 +268,6 @@ class IssueViewSet(
 
 class CommentViewSet(
     AuthorModelMixin,
-    DetailListMixin, 
     ErrorResponseMixin,
     ModelViewSet
     ):
@@ -259,9 +289,14 @@ class CommentViewSet(
     ]
 
     def get_queryset(self):
-        return Comment.objects.filter(
+        queryset = Comment.objects.filter(
             issue_id=self.kwargs["issue_pk"],
         )
+        if self.action in ['list', 'retrieve']:
+            queryset = queryset.select_related(
+                'author', 'issue__project', 'issue__author'
+            )
+        return queryset
 
     def perform_create(self, serializer):
         comment = serializer.save(  
