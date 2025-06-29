@@ -112,6 +112,16 @@ class IssueListSerializer(
             "author_id",
             "comments_count"
         ]
+        extra_kwargs = {
+            "assignee": {
+                "required": False,
+                "allow_null": True
+            }
+        }
+        read_only_fields = [
+            "author_id", 
+            "comments_count",
+        ]
 
 
 class IssueDetailSerializer(
@@ -124,14 +134,30 @@ class IssueDetailSerializer(
     Includes logic for setting the author on creation.
     """
     assignee = PrimaryKeyRelatedField(
-        queryset=User.objects.all()
+        queryset=User.objects.all(),
+        required=False,
+        allow_null=True
     )
     comments_count = SerializerMethodField()
 
     class Meta:
         model = Issue
-        fields = "__all__"
-        read_only_fields = ["id", "author", "created_time"]
+        fields = [
+            "title", "label", "priority", "status",
+            "created_time", "comments_count", "assignee"
+        ]
+        extra_kwargs = {
+            "assignee": {
+                "required": False,
+                "allow_null": True
+            }
+        }
+        read_only_fields = [
+            "id", 
+            "author", 
+            "created_time", 
+            "comments_count"
+        ]
 
 
 class ProjectListSerializer(ModelSerializer):
@@ -201,7 +227,7 @@ class ProjectDetailSerializer(ModelSerializer):
         to the project.
         """
         queryset = instance.issues.all()
-        serializer = IssueMinimalSerializer(queryset, many=True)
+        serializer = IssueListSerializer(queryset, many=True)
         return serializer.data
 
 

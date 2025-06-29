@@ -70,3 +70,14 @@ class UserDetailSerializer(serializers.ModelSerializer):
         user.set_password(password)
         user.save()
         return user
+
+    def update(self, instance, validated_data):
+        """
+        Updates a user instance with a hashed password.
+        """
+        super().update(instance, validated_data)    
+        if "password" in validated_data:
+            password = validated_data.pop("password")
+            instance.set_password(password)
+            instance.save()
+        return instance

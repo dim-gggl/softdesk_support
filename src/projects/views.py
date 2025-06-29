@@ -4,7 +4,8 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework import status
-
+from rest_framework.exceptions import ValidationError
+from rest_framework.validators import UniqueTogetherValidator       
 from .models import Project, Contributor, Issue, Comment
 from .serializers import (
     ProjectDetailSerializer,
@@ -15,11 +16,12 @@ from .serializers import (
     IssueListSerializer,
     CommentSerializer,
 )
-from .permissions import (
+from .permissions import (  
     IsAuthorOrIsAdmin, 
     IsContributor, 
     IsAssignee, 
-    IsContributorOrIsAdmin
+    IsContributorOrIsAdmin,
+    IsProjectAuthor
 )
 from .const import (
     PROJECT_ERROR_MESSAGE,
@@ -28,7 +30,8 @@ from .const import (
     CONTRIBUTOR_ERROR_MESSAGE,
     IS_AUTHOR_TRUE_MESSAGE,
     IS_AUTHOR_FALSE_MESSAGE,
-    CONTRIBUTOR_UNAUTHORIZED_MESSAGE
+    CONTRIBUTOR_UNAUTHORIZED_MESSAGE,
+    CONTRIBUTOR_ALREADY_EXISTS_MESSAGE
 )
 
 User = get_user_model()
@@ -72,7 +75,7 @@ class AuthorModelMixin:
     other actions.
     """
     def get_permissions(self):
-        perms = [IsAuthenticated, IsContributor]
+        perms = [IsAuthenticated, IsContributorOrIsAdmin]
         if self.action in [
             "update", "partial_update", "destroy"
         ]:
@@ -83,7 +86,6 @@ class AuthorModelMixin:
 class ErrorResponseMixin(ModelViewSet):
     """
     Mixin to centralize error response handling logic for views.
-    Inherits from `AuthorModelMixin` to add permissions.
     Then overrides the `create` method to handle error responses 
     in case of POST requests on lists views without request body.
 
@@ -100,7 +102,7 @@ class ErrorResponseMixin(ModelViewSet):
 
         if not serializer.is_valid():
             return Response(
-                self.error_message,
+                serializer.errors,
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -151,7 +153,7 @@ class ProjectViewSet(
         project = serializer.save(author=self.request.user)
         Contributor.objects.create(
             user=self.request.user,
-            project=project
+            project_id=project.id
         )
 
     def get_queryset(self):
@@ -190,7 +192,7 @@ class ContributorViewSet(
         if self.action in ["list",]:
             return [IsContributor()]
         else:
-            return [IsAuthorOrIsAdmin()]
+            return [IsProjectAuthor()]
         
     def get_queryset(self):
         project_pk = self.kwargs.get("project_pk")
@@ -216,10 +218,20 @@ class ContributorViewSet(
         return queryset
 
     def perform_create(self, serializer):
-        serializer.save(
-            project_id=self.kwargs["project_pk"],
-            user_id=self.request.data.get("user")
-        )
+        project_pk = self.kwargs["project_pk"]
+        user_id = self.request.user.id
+        if not Contributor.objects.filter(
+            project_id=project_pk,
+            user_id=user_id
+        ).exists():
+            serializer.save(
+                project_id=project_pk,
+                user_id=user_id
+            )
+        else:
+            raise ValidationError(
+                CONTRIBUTOR_ALREADY_EXISTS_MESSAGE
+            )
 
 
 class IssueViewSet(
@@ -246,6 +258,12 @@ class IssueViewSet(
         "author_id", "id", "created_time", "project__id"
     ]
 
+    def get_serializer_class(self):
+        if self.action in ["create", "retrieve", "update", "partial_update"]:
+            return self.detail_serializer_class
+        else:
+            return self.serializer_class
+
     def get_queryset(self):
         queryset = Issue.objects.filter(
             project_id=self.kwargs["project_pk"]
@@ -255,15 +273,16 @@ class IssueViewSet(
         return queryset
 
     def perform_create(self, serializer):
-        issue = serializer.save(    
+        serializer.save(
             author=self.request.user,
-            project_id=self.kwargs["project_pk"]
+            project=Project.objects.get(
+                id=self.kwargs["project_pk"]
+            )
         )
 
-        Contributor.objects.get_or_create(
-            user=issue.author,
-            project=issue.project
-        )
+    def perform_update(self, serializer):
+        assignee = serializer.validated_data.get("assignee")
+        serializer.save()
 
 
 class CommentViewSet(

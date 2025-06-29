@@ -19,7 +19,7 @@ ISSUE_PRIORITIES = [
     "HIGH",
 ]
 ISSUE_STATUSES = [
-    "TO_DO",
+    "TODO",
     "IN_PROGRESS",
     "FINISHED",
 ]
@@ -78,4 +78,7 @@ CONTRIBUTOR_UNAUTHORIZED_MESSAGE = {
         "This information is only available to "
         "the contributors of the project."
     )
+}
+CONTRIBUTOR_ALREADY_EXISTS_MESSAGE = {
+    "message": "User is already contributing to the project."
 }

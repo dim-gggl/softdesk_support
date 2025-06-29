@@ -11,6 +11,15 @@ class IsAuthorOrIsAdmin(BasePermission):
 
 
 class IsContributor(BasePermission):
+    def has_permission(self, request, view):
+        project_pk = view.kwargs.get("project_pk")
+        if project_pk:
+            return Contributor.objects.filter(
+                project_id=project_pk, 
+                user_id=request.user.id
+            ).exists()
+        return False
+    
     def has_object_permission(self, request, view, obj):
         if hasattr(obj, 'project'):
             project = obj.project
@@ -22,9 +31,19 @@ class IsContributor(BasePermission):
             project_id=project.id, user_id=request.user.id
         ).exists()
 
+
 class IsContributorOrIsAdmin(IsContributor):
+    def has_permission(self, request, view):
+        return super().has_permission(request, view) or request.user.is_staff
+    
     def has_object_permission(self, request, view, obj):
         return super().has_object_permission(request, view, obj) or request.user.is_staff
+
+
+class IsProjectAuthor(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        project = obj.project
+        return project.author == request.user
 
 class IsAssignee(BasePermission):
     def has_object_permission(self, request, view, obj):
