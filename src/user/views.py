@@ -1,6 +1,7 @@
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from rest_framework import status
 
 from .models import User
 from .serializers import UserDetailSerializer, UserListSerializer
@@ -96,3 +97,24 @@ class UserViewSet(ModelViewSet):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Permet à un utilisateur de supprimer son propre profil.
+        Vérifie que l'utilisateur authentifié est bien le propriétaire du profil.
+        """
+        instance = self.get_object()
+        
+        # Vérification supplémentaire de sécurité
+        if instance != request.user:
+            return Response(
+                {"detail": "Vous n'êtes pas autorisé à supprimer ce profil."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Suppression du profil
+        instance.delete()
+        return Response(
+            {"detail": "Profil supprimé avec succès."},
+            status=status.HTTP_204_NO_CONTENT
+        )

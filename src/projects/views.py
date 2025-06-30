@@ -219,7 +219,7 @@ class ContributorViewSet(
 
     def perform_create(self, serializer):
         project_pk = self.kwargs["project_pk"]
-        user_id = self.request.user.id
+        user_id = serializer.validated_data["user"].id
         if not Contributor.objects.filter(
             project_id=project_pk,
             user_id=user_id
@@ -281,6 +281,7 @@ class IssueViewSet(
         )
 
     def perform_update(self, serializer):
+        super().perform_update(serializer)
         assignee = serializer.validated_data.get("assignee")
         serializer.save()
 

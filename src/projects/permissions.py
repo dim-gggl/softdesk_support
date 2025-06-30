@@ -18,7 +18,7 @@ class IsContributor(BasePermission):
                 project_id=project_pk, 
                 user_id=request.user.id
             ).exists()
-        return False
+        return request.user.contribution_links is not None
     
     def has_object_permission(self, request, view, obj):
         if hasattr(obj, 'project'):

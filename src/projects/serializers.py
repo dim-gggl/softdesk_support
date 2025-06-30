@@ -143,7 +143,7 @@ class IssueDetailSerializer(
     class Meta:
         model = Issue
         fields = [
-            "title", "label", "priority", "status",
+            "id", "title", "label", "priority", "status",
             "created_time", "comments_count", "assignee"
         ]
         extra_kwargs = {
