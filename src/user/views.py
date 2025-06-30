@@ -100,21 +100,19 @@ class UserViewSet(ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         """
-        Permet à un utilisateur de supprimer son propre profil.
-        Vérifie que l'utilisateur authentifié est bien le propriétaire du profil.
+        Allows a user to delete their own profile.
+        Checks that the authenticated user is the owner of the profile.
         """
         instance = self.get_object()
         
-        # Vérification supplémentaire de sécurité
         if instance != request.user:
             return Response(
-                {"detail": "Vous n'êtes pas autorisé à supprimer ce profil."},
+                {"detail": "You are not authorized to delete this profile."},
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        # Suppression du profil
         instance.delete()
         return Response(
-            {"detail": "Profil supprimé avec succès."},
+            {"detail": "Profile deleted successfully."},
             status=status.HTTP_204_NO_CONTENT
         )

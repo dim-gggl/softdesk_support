@@ -154,6 +154,11 @@ class Comment(TimeStampedModel, models.Model):
         related_name="comments"
     )
     content = models.TextField(max_length=250)
+    author = models.ForeignKey(
+        to=User,
+        on_delete=models.CASCADE,
+        related_name="comments"
+    )
 
     class Meta:
         ordering = ["-created_time"]

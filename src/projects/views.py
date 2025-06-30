@@ -323,3 +323,22 @@ class CommentViewSet(
             author=self.request.user,
             issue_id=self.kwargs["issue_pk"]
         )
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Allows a user to delete their own comment.
+        Checks that the authenticated user is the author of the comment.
+        """
+        instance = self.get_object()
+        
+        if instance.author != request.user or not request.user.is_staff:
+            return Response(
+                {"detail": "You are not authorized to delete this comment."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        instance.delete()
+        return Response(
+            {"detail": "Comment deleted successfully."},
+            status=status.HTTP_204_NO_CONTENT
+        )
