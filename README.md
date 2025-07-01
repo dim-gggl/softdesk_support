@@ -1,6 +1,5 @@
 ![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fdim-gggl%2Fsoftdesk_support%2Frefs%2Fheads%2Fmain%2Fpyproject.toml)
 ![Static Badge](https://img.shields.io/badge/poetry-2.1.3-yellow)
-
 ![Static Badge](https://img.shields.io/badge/django-5.2.3-orange)
 ![Static Badge](https://img.shields.io/badge/DRF-3.16.0-pink)
 ![Static Badge](https://img.shields.io/badge/api-REST-green)
