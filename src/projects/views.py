@@ -324,6 +324,14 @@ class CommentViewSet(
             issue_id=self.kwargs["issue_pk"]
         )
 
+    def perform_update(self, serializer):
+        super().perform_update(serializer)
+        serializer.save()
+    
+    def perform_partial_update(self, serializer):
+        super().perform_partial_update(serializer)
+        serializer.save()
+
     def destroy(self, request, *args, **kwargs):
         """
         Allows a user to delete their own comment.
