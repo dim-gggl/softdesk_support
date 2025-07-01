@@ -5,6 +5,7 @@
 ![Static Badge](https://img.shields.io/badge/api-REST-green)
 
 
+[Version française](https://github.com/dim-gggl/softdesk_support/tree/main#--soft-desk-support-%EF%B8%8F-1)
 # <div align="center"> 🇬🇧 Soft Desk Support 🖇️
 
 ## <div align="center"> REST API
