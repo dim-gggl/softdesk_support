@@ -191,7 +191,7 @@ class ProjectDetailSerializer(ModelSerializer):
     Includes contributors and associated issues.
     """
     author = StringRelatedField(read_only=True)
-    contributors = SerializerMethodField()
+    contributors_count = SerializerMethodField()
     issues = SerializerMethodField()
 
     class Meta:
@@ -203,7 +203,7 @@ class ProjectDetailSerializer(ModelSerializer):
             "type",
             "author",
             "created_time",
-            "contributors",
+            "contributors_count",
             "issues"
         ]
         read_only_fields = [
@@ -212,14 +212,12 @@ class ProjectDetailSerializer(ModelSerializer):
             "created_time"
         ]
 
-    def get_contributors(self, instance):
+    def get_contributors_count(self, instance):
         """
         Returns serialized data for all contributors linked
         to the project.
         """
-        queryset = instance.contributor_links.all()
-        serializer = ContributorSerializer(queryset, many=True)
-        return serializer.data
+        return instance.contributor_links.count()
 
     def get_issues(self, instance):
         """
