@@ -326,10 +326,7 @@ class CommentViewSet(
 
     def perform_update(self, serializer):
         super().perform_update(serializer)
-        serializer.save()
-    
-    def perform_partial_update(self, serializer):
-        super().perform_partial_update(serializer)
+        content = serializer.validated_data.get("content")
         serializer.save()
 
     def destroy(self, request, *args, **kwargs):
