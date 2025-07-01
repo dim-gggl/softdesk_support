@@ -55,7 +55,9 @@ class DetailListMixin(ModelViewSet):
     minimal_serializer = ""
 
     def get_serializer_class(self):
-        if self.action in ["retrieve", "create", "update", "partial_update"]:
+        if self.action in [
+            "retrieve", "create", "update", "partial_update",
+        ]:
             return self.detail_serializer_class
         elif self.action == "list":
             return self.serializer_class
@@ -162,7 +164,9 @@ class ProjectViewSet(
             contributor_links__user=user
         )
         if self.action == 'retrieve':
-            queryset = queryset.select_related('author').prefetch_related(
+            queryset = queryset.select_related(
+                'author'
+            ).prefetch_related(
                 'contributor_links__user', 
                 'issues__author', 
                 'issues__assignee'
@@ -184,6 +188,8 @@ class ContributorViewSet(
     permission_classes = [IsAuthenticated, IsContributor, IsAdminUser]
     serializer_class = ContributorSerializer
 
+    error_message = CONTRIBUTOR_ERROR_MESSAGE
+
     filterset_fields = [
         "project_id", "user_id", "id", "user__username"
     ]
@@ -196,9 +202,13 @@ class ContributorViewSet(
         
     def get_queryset(self):
         project_pk = self.kwargs.get("project_pk")
-        queryset = Contributor.objects.filter(project_id=project_pk)
+        queryset = Contributor.objects.filter(
+            project_id=project_pk
+        )
 
-        queryset = queryset.select_related('user', 'project__author')
+        queryset = queryset.select_related(
+            'user', 'project__author'
+        )
 
         is_author_param = self.request.query_params.get("is_author")
         if is_author_param is not None:
@@ -259,7 +269,9 @@ class IssueViewSet(
     ]
 
     def get_serializer_class(self):
-        if self.action in ["create", "retrieve", "update", "partial_update"]:
+        if self.action in [
+            "create", "retrieve", "update", "partial_update"
+        ]:
             return self.detail_serializer_class
         else:
             return self.serializer_class
@@ -269,7 +281,9 @@ class IssueViewSet(
             project_id=self.kwargs["project_pk"]
         )
         if self.action in ['list', 'retrieve']:
-            queryset = queryset.select_related('author', 'assignee', 'project')
+            queryset = queryset.select_related(
+                'author', 'assignee', 'project'
+            )
         return queryset
 
     def perform_create(self, serializer):
@@ -324,15 +338,11 @@ class CommentViewSet(
             issue_id=self.kwargs["issue_pk"]
         )
 
-    def perform_update(self, serializer):
-        super().perform_update(serializer)
-        content = serializer.validated_data.get("content")
-        serializer.save()
-
     def destroy(self, request, *args, **kwargs):
         """
         Allows a user to delete their own comment.
-        Checks that the authenticated user is the author of the comment.
+        Checks that the authenticated user is the author of 
+        the comment.
         """
         instance = self.get_object()
         

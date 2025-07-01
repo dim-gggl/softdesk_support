@@ -5,9 +5,12 @@ from .models import Contributor, Comment, Issue
 
 class IsAuthorOrIsAdmin(BasePermission):
     def has_object_permission(self, request, view, obj):
-        if not hasattr(obj, "author"):
-            obj = obj.project
-        return obj.author == request.user or request.user.is_staff
+        if isinstance(obj, Comment):
+            return obj.author == request.user or request.user.is_staff
+        elif hasattr(obj, "author"):
+            return obj.author == request.user or request.user.is_staff
+        else:
+            return request.user.is_staff
 
 
 class IsContributor(BasePermission):
@@ -34,10 +37,14 @@ class IsContributor(BasePermission):
 
 class IsContributorOrIsAdmin(IsContributor):
     def has_permission(self, request, view):
-        return super().has_permission(request, view) or request.user.is_staff
+        return super().has_permission(
+            request, view
+        ) or request.user.is_staff
     
     def has_object_permission(self, request, view, obj):
-        return super().has_object_permission(request, view, obj) or request.user.is_staff
+        return super().has_object_permission(
+            request, view, obj
+        ) or request.user.is_staff
 
 
 class IsProjectAuthor(BasePermission):
